@@ -1,6 +1,6 @@
 # Plug-In Jeedom OpenMQTTGateway (openmqttgateway)
 
-Ce plugin ...
+Ce plugin permet de gérer les objets BLE découvert par une passerelle de type OpenMQTTGateway (https://docs.openmqttgateway.com/)
 
 
 

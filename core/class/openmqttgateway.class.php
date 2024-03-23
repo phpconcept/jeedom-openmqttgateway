@@ -471,9 +471,14 @@ class openmqttgateway extends eqLogic {
       $v_jeedom_device->setConfiguration('type', 'device');
       $v_jeedom_device->setConfiguration('device_mqtt_topic', $p_mqtt_id);
 
+      $v_jeedom_device->setConfiguration('device_brand', '');
+      $v_jeedom_device->setConfiguration('device_model', '');
+      $v_jeedom_device->setConfiguration('device_model_id', '');
+
       //$v_jeedom_device->batteryStatus(50);
       
       $v_jeedom_device->setIsEnable(1);
+      
       $v_jeedom_device->save();
       
       $v_jeedom_device->omgDeviceUpdateAttributes($p_properties, $p_gateway);
@@ -1217,6 +1222,35 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
+      /*
+      $v_brand = $this->cpGetConf('brand');
+      $v_model = $this->cpGetConf('model');
+      $v_model_id = $this->cpGetConf('model_id');
+      
+      if (($v_brand=='') && ($v_model == '') && ($v_model_id == '')) {
+        // ----- Look for attributes to recognize devices
+        if (   isset($p_attributes['brand']) && ($p_attributes['brand'] == 'Xiaomi')
+            && isset($p_attributes['model']) && ($p_attributes['model'] == 'TH Sensor')
+            && isset($p_attributes['model_id']) && (strpos($p_attributes['model'], 'LYWSD03MMC') !== False) ) {
+          // Its an ATC like device
+          $v_brand = 'Xiaomi';
+          $v_model = 'TH Sensor';
+          if (strpos($p_attributes['model'], 'MMC_ATC') !== False) {
+            $v_model_id = 'LYWSD03MMC_ATC';
+          }
+          else {
+            $v_model_id = 'LYWSD03MMC';
+          }
+          
+        }
+        
+        $this->setConfiguration('device_brand', $v_brand);
+        $this->setConfiguration('device_model', $v_model);
+        $this->setConfiguration('device_model_id', $v_model_id);
+        $this->save();
+      }
+      */
+      
       foreach ($p_attributes as $v_key => $v_value) {
         openmqttgateway::log('debug', "  Attribute '".$v_key."' = ".$v_value."");
         
@@ -1232,7 +1266,12 @@ class openmqttgateway extends eqLogic {
             if (is_string($v_value)) $v_subtype = 'string';
             if (is_numeric($v_value)) $v_subtype = 'numeric';
             $v_is_visible = 0;
-            if (in_array($v_key, ['name','rssi'])) {$v_is_visible=1;}
+            
+            /*
+            if (($v_brand=='Xiaomi') && ($v_model == 'TH Sensor') ) {
+              if (in_array($v_key, ['tempc','hum'])) {$v_is_visible=1;}
+            }
+            */
             
             $this->cpCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
@@ -1249,6 +1288,7 @@ class openmqttgateway extends eqLogic {
         }
       }
 
+      openmqttgateway::log('debug', "Update attributs done");
     }
     /* -------------------------------------------------------------------------*/
 
