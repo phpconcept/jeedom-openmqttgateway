@@ -1222,7 +1222,6 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
-      /*
       $v_brand = $this->cpGetConf('brand');
       $v_model = $this->cpGetConf('model');
       $v_model_id = $this->cpGetConf('model_id');
@@ -1231,7 +1230,7 @@ class openmqttgateway extends eqLogic {
         // ----- Look for attributes to recognize devices
         if (   isset($p_attributes['brand']) && ($p_attributes['brand'] == 'Xiaomi')
             && isset($p_attributes['model']) && ($p_attributes['model'] == 'TH Sensor')
-            && isset($p_attributes['model_id']) && (strpos($p_attributes['model'], 'LYWSD03MMC') !== False) ) {
+            && isset($p_attributes['model_id']) && (strpos($p_attributes['model_id'], 'LYWSD03MMC') !== False) ) {
           // Its an ATC like device
           $v_brand = 'Xiaomi';
           $v_model = 'TH Sensor';
@@ -1249,7 +1248,6 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('device_model_id', $v_model_id);
         $this->save();
       }
-      */
       
       foreach ($p_attributes as $v_key => $v_value) {
         openmqttgateway::log('debug', "  Attribute '".$v_key."' = ".$v_value."");
@@ -1267,11 +1265,9 @@ class openmqttgateway extends eqLogic {
             if (is_numeric($v_value)) $v_subtype = 'numeric';
             $v_is_visible = 0;
             
-            /*
             if (($v_brand=='Xiaomi') && ($v_model == 'TH Sensor') ) {
               if (in_array($v_key, ['tempc','hum'])) {$v_is_visible=1;}
             }
-            */
             
             $this->cpCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
@@ -1282,7 +1278,7 @@ class openmqttgateway extends eqLogic {
           }
           
           // ----- Update value
-          if (!is_object($v_cmd)) {
+          if (is_object($v_cmd)) {
             $this->checkAndUpdateCmd($v_key, $v_value);
           }
         }
