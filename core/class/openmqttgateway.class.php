@@ -870,7 +870,8 @@ class openmqttgateway extends eqLogic {
      */
 	public function getImage() {
         $v_type = $this->cpGetType();
-	  	$file = 'plugins/openmqttgateway/desktop/images/'.$v_type.'_icon.png';
+        $v_icon = $this->cpGetConf('icon');
+	  	$file = 'plugins/openmqttgateway/core/config/devices/images/'.$v_icon.'.png';
 		if(!file_exists(__DIR__.'/../../../../'.$file)){
 			return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
 		}
@@ -1222,9 +1223,10 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
-      $v_brand = $this->cpGetConf('brand');
-      $v_model = $this->cpGetConf('model');
-      $v_model_id = $this->cpGetConf('model_id');
+      $v_brand = $this->cpGetConf('device_brand');
+      $v_model = $this->cpGetConf('device_model');
+      $v_model_id = $this->cpGetConf('device_model_id');
+      $v_icon = $this->cpGetConf('device_icon');
       
       if (($v_brand=='') && ($v_model == '') && ($v_model_id == '')) {
         // ----- Look for attributes to recognize devices
@@ -1240,12 +1242,14 @@ class openmqttgateway extends eqLogic {
           else {
             $v_model_id = 'LYWSD03MMC';
           }
+          $v_icon = 'LYWSD03MMC';
           
         }
         
         $this->setConfiguration('device_brand', $v_brand);
         $this->setConfiguration('device_model', $v_model);
         $this->setConfiguration('device_model_id', $v_model_id);
+        $this->setConfiguration('device_icon', $v_icon);
         $this->save();
       }
       
