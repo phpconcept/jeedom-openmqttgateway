@@ -870,7 +870,7 @@ class openmqttgateway extends eqLogic {
      */
 	public function getImage() {
         $v_type = $this->cpGetType();
-        $v_icon = $this->cpGetConf('icon');
+        $v_icon = $this->cpGetConf('device_icon');
 	  	$file = 'plugins/openmqttgateway/core/config/devices/images/'.$v_icon.'.png';
 		if(!file_exists(__DIR__.'/../../../../'.$file)){
 			return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
