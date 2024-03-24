@@ -1234,7 +1234,7 @@ class openmqttgateway extends eqLogic {
           // Its an ATC like device
           $v_brand = 'Xiaomi';
           $v_model = 'TH Sensor';
-          if (strpos($p_attributes['model'], 'MMC_ATC') !== False) {
+          if (strpos($p_attributes['model_id'], 'MMC_ATC') !== False) {
             $v_model_id = 'LYWSD03MMC_ATC';
           }
           else {
