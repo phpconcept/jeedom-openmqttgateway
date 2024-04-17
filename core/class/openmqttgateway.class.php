@@ -33,8 +33,16 @@ class openmqttgateway extends eqLogic {
 
     /*
      * Fonction exécutée automatiquement toutes les minutes par Jeedom
-	public static function cron() {}
      */
+	public static function cron() {
+      $v_list = openmqttgateway::omgGatewayList(['_isEnable'=>true]);
+      foreach ($v_list as $v_item) {
+        $v_item->omgGatewayCheckOnline();
+      }
+    
+    }
+     
+     
     public static function cron5() {
         
       // ----- Recalculate mode for each device
@@ -195,6 +203,20 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
+     * Method : omgGatewayList()
+     * Description :
+     *   openmqttgateway::omgGatewayList(['zone'=>'', 'ddd'=>'vvv'])
+     *   openmqttgateway::omgGatewayList(['_isEnable'=>true]) : pour checker le getIsEnable de jeedom pour l'objet
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public static function omgGatewayList($p_filter_list=array()) {
+      return(openmqttgateway::cpEqList('gateway', $p_filter_list));
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
      * Method : omgGatewayGetByTopic()
      * Description :
      *   openmqttgateway::omgGatewayGetByTopic('ZZZZZ')
@@ -244,7 +266,7 @@ class openmqttgateway extends eqLogic {
       $v_jeedom_device->save();
       
       // ----- Create default online status command
-      $v_cmd = $v_jeedom_device->omgCmdCreate($v_key, ['name'=>'online_status',
+      $v_cmd = $v_jeedom_device->omgCmdCreate('online_status', ['name'=>'online_status',
                                   'type'=>'info',
                                   'subtype'=>'binary', 
                                   'isHistorized'=>1, 
@@ -655,7 +677,8 @@ class openmqttgateway extends eqLogic {
         openmqttgatewaylog::log('debug', "preSaveGateway() : new gateway, init properties");
         
         // ----- Set default values
-        $this->setConfiguration('cmd_auto_discover', 1);
+        $this->setConfiguration('prop_auto_discover', 1);
+        $this->setConfiguration('online_timeout', 2);
 
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1201,16 +1224,15 @@ class openmqttgateway extends eqLogic {
             if (is_array($v_value)) $v_subtype = 'string';
             $v_is_visible = 0;
             
-            $this->omgCmdCreate($v_key, ['name'=>$v_key,
+            $v_cmd = $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
                                         'subtype'=>$v_subtype, 
                                         'isHistorized'=>0, 
                                         'isVisible'=>$v_is_visible]);
-            $v_cmd = $this->getCmd(null, $v_key);
           }
           
           // ----- Update value
-          if (!is_object($v_cmd)) {
+          if (is_object($v_cmd)) {
             if (is_array($v_value)) $v_value = json_encode($v_value);
             //if (is_bool($v_value)) $v_value = ($v_value?'1':'0');
             $this->checkAndUpdateCmd($v_key, $v_value);
@@ -1241,9 +1263,54 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    public function omgGatewayChangeToOnline() {    
-      // TBC : Change online status cmd 
+    public function omgGatewayChangeToOnline() {
+      if (($v_online_status = $this->cpCmdGetValue('online_status')) == 1) {
+        return;
+      }
+      openmqttgatewaylog::log('info', 'Gateway "'.$this->getName().'" passe en mode connectée.');
       $this->checkAndUpdateCmd('online_status', 1);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayChangeToOffline()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayChangeToOffline() {
+      if (($v_online_status = $this->cpCmdGetValue('online_status')) == 0) {
+        return;
+      }
+      openmqttgatewaylog::log('warning', 'Gateway "'.$this->getName().'" passe en mode déconnectée.');
+      $this->checkAndUpdateCmd('online_status', 0);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayCheckOnline()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayCheckOnline() {    
+      openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline()');
+      if (($v_online_status = $this->cpCmdGetValue('online_status')) == 0) {
+        return;
+      }
+      
+      $v_last_ts = $this->getStatus('last_rcv_mqtt');
+      $v_timeout = 60*$this->cpGetConf('online_timeout');
+      
+      //openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline() last_rcv_mqtt : '.$v_last_ts);
+      //openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline() timeout : '.$v_timeout);
+      //openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline() time() : '.time());
+      
+      if (($v_last_ts + $v_timeout) < time()) {
+        $this->omgGatewayChangeToOffline();
+      }
     }
     /* -------------------------------------------------------------------------*/
 
@@ -1307,12 +1374,11 @@ class openmqttgateway extends eqLogic {
               if (in_array($v_key, ['tempc','hum'])) {$v_is_visible=1;}
             }
             
-            $this->omgCmdCreate($v_key, ['name'=>$v_key,
+            $v_cmd = $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
                                         'subtype'=>$v_subtype, 
                                         'isHistorized'=>0, 
                                         'isVisible'=>$v_is_visible]);
-            $v_cmd = $this->getCmd(null, $v_key);
           }
           
           // ----- Update value

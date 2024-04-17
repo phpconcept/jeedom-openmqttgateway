@@ -29,4 +29,11 @@
     </div>
   </div>
 
+  <div class="row form-group">
+    <label class="col-sm-2 control-label">{{Online timeout (minutes) :}}</label>
+    <div class="col-sm-7">
+      <input type="text" class="cp_attr_gateway eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="online_timeout" placeholder="{{temps en minutes}}"/>
+    </div>
+  </div>
+
 
