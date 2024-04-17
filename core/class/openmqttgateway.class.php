@@ -243,8 +243,14 @@ class openmqttgateway extends eqLogic {
       $v_jeedom_device->setIsEnable(1);
       $v_jeedom_device->save();
       
-      //$v_jeedom_device->omgGatewayUpdateAttributes($p_properties);
-            
+      // ----- Create default online status command
+      $v_cmd = $v_jeedom_device->omgCmdCreate($v_key, ['name'=>'online_status',
+                                  'type'=>'info',
+                                  'subtype'=>'binary', 
+                                  'isHistorized'=>1, 
+                                  'isVisible'=>1]);
+      $v_jeedom_device->checkAndUpdateCmd('online_status', 0);
+
       return($v_jeedom_device);
     }
     /* -------------------------------------------------------------------------*/
@@ -491,7 +497,7 @@ class openmqttgateway extends eqLogic {
         if (is_string($v_value)) $v_subtype = 'string';
         if (is_numeric($v_value)) $v_subtype = 'numeric';
         
-        $v_jeedom_device->cpCmdCreate($v_key, ['name'=>$v_key,
+        $v_jeedom_device->omgCmdCreate($v_key, ['name'=>$v_key,
                                                'type'=>'info',
                                                'subtype'=>$v_subtype]);
         $v_jeedom_device->checkAndUpdateCmd($v_key, $v_value);
@@ -558,14 +564,14 @@ class openmqttgateway extends eqLogic {
       
         $v_cmd_order=1;
         // ----- Création des commandes par défaut
-        //$this->cpCmdCreate('last_seen', ['name'=>'Dernière Communication', 'type'=>'info', 'subtype'=>'string', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>$v_cmd_order++]);
+        //$this->omgCmdCreate('last_seen', ['name'=>'Dernière Communication', 'type'=>'info', 'subtype'=>'string', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>$v_cmd_order++]);
       }
 
       else if ($v_type == 'gateway') {
 
         $v_cmd_order=1;
         // ----- Création des commandes par défaut
-        //$this->cpCmdCreate('last_seen', ['name'=>'Dernière Communication', 'type'=>'info', 'subtype'=>'string', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>$v_cmd_order++]);
+        //$this->omgCmdCreate('last_seen', ['name'=>'Dernière Communication', 'type'=>'info', 'subtype'=>'string', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>$v_cmd_order++]);
       }
 
       else {
@@ -959,6 +965,8 @@ class openmqttgateway extends eqLogic {
           if ($v_gateway === null) continue;
         }
         
+        $v_gateway->omgGatewayFlagRcvMqttMsg();
+        
         if (isset($v_values['BTtoMQTT'])) {
           foreach ($v_values['BTtoMQTT'] as $v_id => $v_properties) {
             if (is_array($v_properties)) {
@@ -1054,14 +1062,14 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : cpCmdCreate()
+     * Method : omgCmdCreate()
      * Description :
-     *   cpCmdCreate('confort', ['name'=>'Confort', 'type'=>'action', 'subtype'=>'other', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>1]);
+     *   omgCmdCreate('confort', ['name'=>'Confort', 'type'=>'action', 'subtype'=>'other', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>1]);
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    public function cpCmdCreate($p_cmd_id, $p_att_list=array()) {
+    public function omgCmdCreate($p_cmd_id, $p_att_list=array()) {
 
       // ----- Look for existing command
       $v_cmd = $this->getCmd(null, $p_cmd_id);
@@ -1069,7 +1077,7 @@ class openmqttgateway extends eqLogic {
       // ----- Look if command already exists in device
       if (is_object($v_cmd)) {
         openmqttgateway::log('debug', "Command '".$p_cmd_id."' already defined in device.");
-        return(true);
+        return($v_cmd);
       }
 
       // ----- Create Command
@@ -1126,7 +1134,7 @@ class openmqttgateway extends eqLogic {
 
       $v_cmd->save();
       
-      return(true);
+      return($v_cmd);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -1193,7 +1201,7 @@ class openmqttgateway extends eqLogic {
             if (is_array($v_value)) $v_subtype = 'string';
             $v_is_visible = 0;
             
-            $this->cpCmdCreate($v_key, ['name'=>$v_key,
+            $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
                                         'subtype'=>$v_subtype, 
                                         'isHistorized'=>0, 
@@ -1210,6 +1218,32 @@ class openmqttgateway extends eqLogic {
         }
       }
 
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayFlagRcvMqttMsg()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayFlagRcvMqttMsg() {    
+      $this->setStatus('last_rcv_mqtt', time());
+      $this->omgGatewayChangeToOnline();
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayChangeToOnline()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayChangeToOnline() {    
+      // TBC : Change online status cmd 
+      $this->checkAndUpdateCmd('online_status', 1);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -1273,7 +1307,7 @@ class openmqttgateway extends eqLogic {
               if (in_array($v_key, ['tempc','hum'])) {$v_is_visible=1;}
             }
             
-            $this->cpCmdCreate($v_key, ['name'=>$v_key,
+            $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
                                         'subtype'=>$v_subtype, 
                                         'isHistorized'=>0, 
