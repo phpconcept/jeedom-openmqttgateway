@@ -80,11 +80,11 @@ function openmqttgateway_update_v_1_3($v_from_version='') {
   foreach ($eqLogics as $v_eq) {
     $v_flag_save = false;
     
-    if (!$v_eq->cpIsType(array('device','zone'))) {
+    if (!$v_eq->omgIsType(array('device','zone'))) {
       continue;
     }
     
-    $v_type = $v_eq->cpGetType();
+    $v_type = $v_eq->omgGetType();
     
     // ----- Ajout des configurations de temperature cible par device
     if ($v_eq->getConfiguration($v_type.'_temperature_confort', '') == '') {

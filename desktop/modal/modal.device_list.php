@@ -65,7 +65,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
   <div class="eqLogicThumbnailContainer">
 
 <?php
-  $v_list = openmqttgateway::cpDeviceList();
+  $v_list = openmqttgateway::omgDeviceList();
   //$v_list = eqLogic::byType('openmqttgateway');
   foreach ($v_list as $eqLogic) {
     $opacity = ($eqLogic->getIsEnable()) ? '' : 'disableCard';

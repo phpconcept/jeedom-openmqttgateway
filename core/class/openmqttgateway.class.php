@@ -46,7 +46,7 @@ class openmqttgateway extends eqLogic {
     public static function cron5() {
         
       // ----- Recalculate mode for each device
-      $v_list = openmqttgateway::cpDeviceList(['_isEnable'=>true]);
+      $v_list = openmqttgateway::omgDeviceList(['_isEnable'=>true]);
       foreach ($v_list as $v_device) {
         // TBC
       }
@@ -108,19 +108,19 @@ class openmqttgateway extends eqLogic {
 
 
     /**---------------------------------------------------------------------------
-     * Method : cpEqList()
+     * Method : omgEqList()
      * Description :
-     *   openmqttgateway::cpEqList('device', ['zone'=>'', 'ddd'=>'vvv'])
-     *   openmqttgateway::cpEqList('device', ['_isEnable'=>true]) : pour checker le getIsEnable de jeedom pour l'objet
+     *   openmqttgateway::omgEqList('device', ['zone'=>'', 'ddd'=>'vvv'])
+     *   openmqttgateway::omgEqList('device', ['_isEnable'=>true]) : pour checker le getIsEnable de jeedom pour l'objet
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    public static function cpEqList($p_type, $p_filter_list=array()) {
+    public static function omgEqList($p_type, $p_filter_list=array()) {
       $v_result = array();
       $eqLogics = eqLogic::byType('openmqttgateway');
       foreach ($eqLogics as $v_eq) {
-        if ($v_eq->cpGetConf('type') != $p_type) {
+        if ($v_eq->omgGetConf('type') != $p_type) {
           continue;
         }
         
@@ -134,7 +134,7 @@ class openmqttgateway extends eqLogic {
                 break;
               }
             }
-            else if ($v_eq->cpGetConf($v_key) != $v_value) {
+            else if ($v_eq->omgGetConf($v_key) != $v_value) {
               $v_filter_ok = false;
               break;
             }
@@ -152,16 +152,16 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : cpDeviceList()
+     * Method : omgDeviceList()
      * Description :
-     *   openmqttgateway::cpDeviceList(['zone'=>'', 'ddd'=>'vvv'])
-     *   openmqttgateway::cpDeviceList(['_isEnable'=>true]) : pour checker le getIsEnable de jeedom pour l'objet
+     *   openmqttgateway::omgDeviceList(['zone'=>'', 'ddd'=>'vvv'])
+     *   openmqttgateway::omgDeviceList(['_isEnable'=>true]) : pour checker le getIsEnable de jeedom pour l'objet
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    public static function cpDeviceList($p_filter_list=array()) {
-      return(openmqttgateway::cpEqList('device', $p_filter_list));
+    public static function omgDeviceList($p_filter_list=array()) {
+      return(openmqttgateway::omgEqList('device', $p_filter_list));
     }
     /* -------------------------------------------------------------------------*/
 
@@ -177,11 +177,11 @@ class openmqttgateway extends eqLogic {
     public static function omgEqGetByTopic($p_topic, $p_type) {
       $eqLogics = eqLogic::byType('openmqttgateway');
       foreach ($eqLogics as $v_eq) {
-        if ($v_eq->cpGetConf('type') != $p_type) {
+        if ($v_eq->omgGetConf('type') != $p_type) {
           continue;
         }
         
-        if ($v_eq->cpGetConf($p_type.'_mqtt_topic') == $p_topic) {
+        if ($v_eq->omgGetConf($p_type.'_mqtt_topic') == $p_topic) {
           return($v_eq);
         }
       }
@@ -212,7 +212,7 @@ class openmqttgateway extends eqLogic {
      * ---------------------------------------------------------------------------
      */
     public static function omgGatewayList($p_filter_list=array()) {
-      return(openmqttgateway::cpEqList('gateway', $p_filter_list));
+      return(openmqttgateway::omgEqList('gateway', $p_filter_list));
     }
     /* -------------------------------------------------------------------------*/
 
@@ -540,7 +540,7 @@ class openmqttgateway extends eqLogic {
      */
     public static function omgDeviceRemoveAll() {
       openmqttgatewaylog::log('debug', 'Removing all the objects');
-      $v_list = openmqttgateway::cpDeviceList();
+      $v_list = openmqttgateway::omgDeviceList();
       foreach ($v_list as $v_objet) {
         $v_objet->remove();
       }
@@ -649,13 +649,13 @@ class openmqttgateway extends eqLogic {
         // ----- Look if something change
         // Doing change before the save
         /*
-        $v_nature_fil_pilote = $this->cpGetConf('nature_fil_pilote');
-        if (   ($eqLogic->cpGetConf('nature_fil_pilote') != $v_nature_fil_pilote)
+        $v_nature_fil_pilote = $this->omgGetConf('nature_fil_pilote');
+        if (   ($eqLogic->omgGetConf('nature_fil_pilote') != $v_nature_fil_pilote)
             || (   ($v_nature_fil_pilote == 'fp_device') 
-                && ($eqLogic->cpGetConf('fp_device_id') != $this->cpGetConf('fp_device_id')))
-            || ($eqLogic->cpGetConf('lien_commutateur') != $this->cpGetConf('lien_commutateur'))
-            || ($eqLogic->cpGetConf('lien_commutateur_a') != $this->cpGetConf('lien_commutateur_a'))
-            || ($eqLogic->cpGetConf('lien_commutateur_b') != $this->cpGetConf('lien_commutateur_b')) ) {
+                && ($eqLogic->omgGetConf('fp_device_id') != $this->omgGetConf('fp_device_id')))
+            || ($eqLogic->omgGetConf('lien_commutateur') != $this->omgGetConf('lien_commutateur'))
+            || ($eqLogic->omgGetConf('lien_commutateur_a') != $this->omgGetConf('lien_commutateur_a'))
+            || ($eqLogic->omgGetConf('lien_commutateur_b') != $this->omgGetConf('lien_commutateur_b')) ) {
           $this->cpNatureChangeTo($v_nature_fil_pilote);
         }
         */
@@ -814,7 +814,7 @@ class openmqttgateway extends eqLogic {
         return parent::toHtml($_version);
       }
       
-      if ($this->cpIsType('device')) {
+      if ($this->omgIsType('device')) {
       //$_version = 'mobile'; // dev trick
         if ($_version == 'dashboard') {
           return $this->toHtml_device($_version);
@@ -898,8 +898,8 @@ class openmqttgateway extends eqLogic {
      * Non obligatoire permet d'associer une icone custom pour l'objet
      */
 	public function getImage() {
-        $v_type = $this->cpGetType();
-        $v_icon = $this->cpGetConf('device_icon');
+        $v_type = $this->omgGetType();
+        $v_icon = $this->omgGetConf('device_icon');
 	  	$file = 'plugins/openmqttgateway/core/config/devices/images/'.$v_icon.'.png';
 		if(!file_exists(__DIR__.'/../../../../'.$file)){
 			return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
@@ -1017,8 +1017,17 @@ class openmqttgateway extends eqLogic {
         }
         
         if (isset($v_values['SYStoMQTT'])) {
-          if ($v_gateway->cpGetConf('prop_auto_discover')) {
+          if ($v_gateway->omgGetConf('prop_auto_discover')) {
             $v_gateway->omgGatewayUpdateSysAttribut($v_values['SYStoMQTT']);
+          }
+        }
+        
+        if (isset($v_values['LWT'])) {
+          if ($v_values['LWT'] == 'offline') {
+            $v_gateway->omgGatewayChangeToOffline();
+          }
+          elseif  ($v_values['LWT'] == 'online') {
+            // Déjà fait par l'update à la reception du message
           }
         }
       }
@@ -1033,7 +1042,7 @@ class openmqttgateway extends eqLogic {
 
 
     /**---------------------------------------------------------------------------
-     * Method : cpGetConf()
+     * Method : omgGetConf()
      * Description :
      *   Récupère la valeur stockée pour un attribut de configuration.
      *   Ou la valeur par defaut si absent.
@@ -1041,35 +1050,35 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-	function cpGetConf($p_key) {
+	function omgGetConf($p_key) {
 	  return $this->getConfiguration($p_key, '');
 	}
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : cpGetType()
+     * Method : omgGetType()
      * Description :
      *   Retourne l'un des 3 types majeurs d'équipement : 'gateway', 'device' ou 'zone'.
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-	function cpGetType() {
+	function omgGetType() {
 	  return $this->getConfiguration('type', '');
 	}
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : cpIsType()
+     * Method : omgIsType()
      * Description :
-     *   example : if ($this->cpIsType(array('device','zone')))
-     *   ou if ($this->cpIsType('device'))
+     *   example : if ($this->omgIsType(array('device','zone')))
+     *   ou if ($this->omgIsType('device'))
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-	function cpIsType($p_value) {
-      $v_type = $this->cpGetType();
+	function omgIsType($p_value) {
+      $v_type = $this->omgGetType();
       if (is_array($p_value)) {
         foreach ($p_value as $v_item) {
           if ($v_type == $v_item) {
@@ -1165,13 +1174,13 @@ class openmqttgateway extends eqLogic {
 
 
     /**---------------------------------------------------------------------------
-     * Method : cpCmdGetValue()
+     * Method : omgCmdGetValue()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-	public function cpCmdGetValue($p_cmd_logicalId) {
+	public function omgCmdGetValue($p_cmd_logicalId) {
       if (!is_object($v_cmd = $this->getCmd(null, $p_cmd_logicalId))) {
         openmqttgateway::log('debug',  "Missing command '".$p_cmd_logicalId."' for equipement '".$this->getName()."'.");
         return('');
@@ -1216,7 +1225,7 @@ class openmqttgateway extends eqLogic {
         else {
           // ----- Look if command exists
           $v_cmd = $this->getCmd(null, $v_key);
-          if (!is_object($v_cmd) && $this->cpGetConf('prop_auto_discover')) {            
+          if (!is_object($v_cmd) && $this->omgGetConf('prop_auto_discover')) {            
             $v_subtype = 'string';
             if (is_string($v_value)) $v_subtype = 'string';
             if (is_numeric($v_value)) $v_subtype = 'numeric';
@@ -1264,7 +1273,7 @@ class openmqttgateway extends eqLogic {
      * ---------------------------------------------------------------------------
      */
     public function omgGatewayChangeToOnline() {
-      if (($v_online_status = $this->cpCmdGetValue('online_status')) == 1) {
+      if (($v_online_status = $this->omgCmdGetValue('online_status')) == 1) {
         return;
       }
       openmqttgatewaylog::log('info', 'Gateway "'.$this->getName().'" passe en mode connectée.');
@@ -1280,7 +1289,7 @@ class openmqttgateway extends eqLogic {
      * ---------------------------------------------------------------------------
      */
     public function omgGatewayChangeToOffline() {
-      if (($v_online_status = $this->cpCmdGetValue('online_status')) == 0) {
+      if (($v_online_status = $this->omgCmdGetValue('online_status')) == 0) {
         return;
       }
       openmqttgatewaylog::log('warning', 'Gateway "'.$this->getName().'" passe en mode déconnectée.');
@@ -1297,12 +1306,12 @@ class openmqttgateway extends eqLogic {
      */
     public function omgGatewayCheckOnline() {    
       openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline()');
-      if (($v_online_status = $this->cpCmdGetValue('online_status')) == 0) {
+      if (($v_online_status = $this->omgCmdGetValue('online_status')) == 0) {
         return;
       }
       
       $v_last_ts = $this->getStatus('last_rcv_mqtt');
-      $v_timeout = 60*$this->cpGetConf('online_timeout');
+      $v_timeout = 60*$this->omgGetConf('online_timeout');
       
       //openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline() last_rcv_mqtt : '.$v_last_ts);
       //openmqttgatewaylog::log('debug', 'omgGatewayCheckOnline() timeout : '.$v_timeout);
@@ -1324,10 +1333,10 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
-      $v_brand = $this->cpGetConf('device_brand');
-      $v_model = $this->cpGetConf('device_model');
-      $v_model_id = $this->cpGetConf('device_model_id');
-      $v_icon = $this->cpGetConf('device_icon');
+      $v_brand = $this->omgGetConf('device_brand');
+      $v_model = $this->omgGetConf('device_model');
+      $v_model_id = $this->omgGetConf('device_model_id');
+      $v_icon = $this->omgGetConf('device_icon');
       
       if (($v_brand=='') && ($v_model == '') && ($v_model_id == '')) {
         // ----- Look for attributes to recognize devices
@@ -1364,7 +1373,7 @@ class openmqttgateway extends eqLogic {
         else {
           // ----- Look if command exists
           $v_cmd = $this->getCmd(null, $v_key);
-          if (!is_object($v_cmd) && $this->cpGetConf('cmd_auto_discover')) {            
+          if (!is_object($v_cmd) && $this->omgGetConf('cmd_auto_discover')) {            
             $v_subtype = 'string';
             if (is_string($v_value)) $v_subtype = 'string';
             if (is_numeric($v_value)) $v_subtype = 'numeric';
@@ -1433,7 +1442,7 @@ class openmqttgatewayCmd extends cmd {
         $v_logical_id = $this->getLogicalId();
         
         // ---- Look fos specific cmds per object type
-        if ($eqLogic->cpIsType('gateway')) {
+        if ($eqLogic->omgIsType('gateway')) {
           return($this->execute_gateway($eqLogic, $v_logical_id, $_options));
         }
         
