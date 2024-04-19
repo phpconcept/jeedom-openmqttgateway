@@ -1218,8 +1218,9 @@ class openmqttgateway extends eqLogic {
       foreach ($p_attributes as $v_key => $v_value) {
         openmqttgateway::log('debug', "  Attribute '".$v_key."' = ".$v_value."");
         
-        // ----- Look for not cmd attributes
-        if (in_array($v_key, ['xxxxname','xxxxid'])) {
+        // ----- On regarde les attributs que l'on ne veut pas voir comme des commandes
+        if (in_array($v_key, ['___att1','___att2'])) {
+          // aucun pour l'intant
         }
         
         else {
@@ -1232,6 +1233,7 @@ class openmqttgateway extends eqLogic {
             if (is_bool($v_value)) $v_subtype = 'binary';
             if (is_array($v_value)) $v_subtype = 'string';
             $v_is_visible = 0;
+            if (in_array($v_key, ['SSID','ip'])) $v_is_visible = 1;
             
             $v_cmd = $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
@@ -1243,7 +1245,6 @@ class openmqttgateway extends eqLogic {
           // ----- Update value
           if (is_object($v_cmd)) {
             if (is_array($v_value)) $v_value = json_encode($v_value);
-            //if (is_bool($v_value)) $v_value = ($v_value?'1':'0');
             $this->checkAndUpdateCmd($v_key, $v_value);
           }
         }
