@@ -628,6 +628,7 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('cmd_auto_discover', 1);
         $this->setConfiguration('best_gateway', '');
         $this->setConfiguration('best_gateway_rssi', -199);
+        $this->setConfiguration('best_gateway_ts', time()); // ts : timestamp
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1338,6 +1339,7 @@ class openmqttgateway extends eqLogic {
       
       $v_best_gateway = $this->omgGetConf('best_gateway');
       $v_best_gateway_rssi = $this->omgGetConf('best_gateway_rssi');
+      $v_best_gateway_ts = $this->omgGetConf('best_gateway_ts');
       $v_rssi = -199;
 
       // ----- Regarde s'il y a un rssi
@@ -1351,8 +1353,15 @@ class openmqttgateway extends eqLogic {
         $v_rssi = $p_attributes['rssi'];
         if ($v_bgw_name != $v_best_gateway) {
           if ($v_best_gateway_rssi > $p_attributes['rssi']) {
-            openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un moins bon rssi (".$v_rssi."/".$v_best_gateway_rssi."). Ignore.");
-            return;
+            // ----- Si l'ancien message date de plus de 5 minutes alors on prend en compte le nouveau quand même
+            // TBC : à adapter ...
+            if ((time() - $v_best_gateway_ts) > (5*60)) {
+              openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un moins bon rssi (".$v_rssi."/".$v_best_gateway_rssi."). Mais plus de message de la precedente.");
+            }
+            else {
+              openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un moins bon rssi (".$v_rssi."/".$v_best_gateway_rssi."). Ignore.");
+              return;
+            }
           }
           else {
             openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un meilleur rssi (".$v_rssi.").");
@@ -1434,6 +1443,7 @@ class openmqttgateway extends eqLogic {
         openmqttgateway::log('debug', "Best Gateway is now : ".$v_best." with rssi=".$v_rssi);
         $this->setConfiguration('best_gateway', $v_best);
         $this->setConfiguration('best_gateway_rssi', $v_rssi);
+        $this->setConfiguration('best_gateway_ts', time());
         $this->save();
       }
 
