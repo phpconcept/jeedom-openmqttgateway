@@ -626,6 +626,8 @@ class openmqttgateway extends eqLogic {
         
         // ----- Set default values
         $this->setConfiguration('cmd_auto_discover', 1);
+        $this->setConfiguration('best_gateway', '');
+        $this->setConfiguration('best_gateway_rssi', -199);
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1233,7 +1235,7 @@ class openmqttgateway extends eqLogic {
             if (is_bool($v_value)) $v_subtype = 'binary';
             if (is_array($v_value)) $v_subtype = 'string';
             $v_is_visible = 0;
-            if (in_array($v_key, ['SSID','ip'])) $v_is_visible = 1;
+            if (in_array($v_key, ['SSID','ip'])) {$v_is_visible = 1;}
             
             $v_cmd = $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
@@ -1334,6 +1336,33 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
+      $v_best_gateway = $this->omgGetConf('best_gateway');
+      $v_best_gateway_rssi = $this->omgGetConf('best_gateway_rssi');
+      $v_rssi = -199;
+
+      // ----- Regarde s'il y a un rssi
+      if (isset($p_attributes['rssi']) && ($p_gateway !== null)) {
+        // ----- Stock dans la liste des gateways qui voient l'objet
+        // TBC
+        
+        
+        // ----- Regarde si c'est une nouvelle gateway avec un meilleur rssi
+        $v_bgw_name = $p_gateway->omgGetConf('gateway_mqtt_topic');
+        $v_rssi = $p_attributes['rssi'];
+        if ($v_bgw_name != $v_best_gateway) {
+          if ($v_best_gateway_rssi > $p_attributes['rssi']) {
+            openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un moins bon rssi (".$v_rssi."/".$v_best_gateway_rssi."). Ignore.");
+            return;
+          }
+          else {
+            openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un meilleur rssi (".$v_rssi.").");
+          }
+        }
+        else {
+          openmqttgateway::log('debug', "Message venant de la même gateway (".$v_bgw_name.") avec le rssi (".$v_rssi."/".$v_best_gateway_rssi.").");
+        }
+      }
+            
       $v_brand = $this->omgGetConf('device_brand');
       $v_model = $this->omgGetConf('device_model');
       $v_model_id = $this->omgGetConf('device_model_id');
@@ -1396,6 +1425,16 @@ class openmqttgateway extends eqLogic {
             $this->checkAndUpdateCmd($v_key, $v_value);
           }
         }
+      }
+      
+      openmqttgateway::log('debug', "Best rssi : ".$v_best_gateway_rssi." new rssi=".$v_rssi);
+      
+      if (($p_gateway !== null) && ($v_best_gateway_rssi < $v_rssi)) {
+        $v_best = $p_gateway->omgGetConf('gateway_mqtt_topic');
+        openmqttgateway::log('debug', "Best Gateway is now : ".$v_best." with rssi=".$v_rssi);
+        $this->setConfiguration('best_gateway', $v_best);
+        $this->setConfiguration('best_gateway_rssi', $v_rssi);
+        $this->save();
       }
 
       openmqttgateway::log('debug', "Update attributs done");
