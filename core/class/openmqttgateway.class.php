@@ -501,7 +501,6 @@ class openmqttgateway extends eqLogic {
 
       $v_jeedom_device->setConfiguration('device_brand', '');
       $v_jeedom_device->setConfiguration('device_model', '');
-      $v_jeedom_device->setConfiguration('device_model_id', '');
 
       //$v_jeedom_device->batteryStatus(50);
       
@@ -544,6 +543,31 @@ class openmqttgateway extends eqLogic {
       foreach ($v_list as $v_objet) {
         $v_objet->remove();
       }
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceSupportedList()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    static function omgDeviceSupportedList() {
+        
+      // ----- Inclure la liste des devices
+      include dirname(__FILE__) . '/../../core/config/devices/device_list.inc.php';
+
+      $v_list = json_decode($v_device_list_json, true);
+      if (json_last_error() != JSON_ERROR_NONE) {
+       centralepilote::log('error', "Erreur dans le format json du fichier 'core/config/device_list.inc.php' (".json_last_error_msg().")");
+       $v_list = array();
+      }
+      
+      //centralepilote::log('debug', "json:".print_r($v_list ,true));
+      //centralepilote::log('debug', "json:".$v_device_list_json);
+
+      return($v_list);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -1379,7 +1403,6 @@ class openmqttgateway extends eqLogic {
             
       $v_brand = $this->omgGetConf('device_brand');
       $v_model = $this->omgGetConf('device_model');
-      $v_model_id = $this->omgGetConf('device_model_id');
       $v_icon = $this->omgGetConf('device_icon');
       
       if (($v_brand=='') && ($v_model == '') && ($v_model_id == '')) {
@@ -1402,7 +1425,6 @@ class openmqttgateway extends eqLogic {
         
         $this->setConfiguration('device_brand', $v_brand);
         $this->setConfiguration('device_model', $v_model);
-        $this->setConfiguration('device_model_id', $v_model_id);
         $this->setConfiguration('device_icon', $v_icon);
         $this->save();
       }
