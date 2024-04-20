@@ -29,6 +29,12 @@ if (!isConnect()) {
 
     <fieldset>
 
+        <div class="form-group">
+            <div class="col-sm-9">
+                   <div style="background-color: #039be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Paramètres MQTT}}</div>
+            </div>
+        </div>
+
         <div class="row form-group">
             <label class="col-lg-4 control-label">{{MQTT Topic : }}</label>
             <div class="col-lg-5">
@@ -43,8 +49,33 @@ if (!isConnect()) {
             </div>
         </div>
 
+        <div class="form-group">
+            <div class="col-sm-9">
+                   <div style="background-color: #039be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Calcul de proximité en mode multi-Gateways}}</div>
+            </div>
+        </div>
+
         <div class="row form-group">
-            <label class="col-lg-4 control-label">{{Github Version}} : <?php echo OMG_VERSION;?></label>
+            <label class="col-lg-4 control-label">{{RSSI Interval Cycle d'hyst&eacute;r&eacute;sis (dBm) : }}
+            <sup><i class="fa fa-question-circle tooltips" title="{{Nombre de dBm supérieur à prendre en compte pour changer de gateway la plus proche. Recommandé 5.}}"></i></sup>
+            </label>
+            <div class="col-lg-5">
+                <input type="text" class="configKey form-control" data-l1key="multi_gw_rssi_hysteresis">
+            </div>
+        </div>
+
+        <div class="row form-group">
+            <label class="col-lg-4 control-label">{{Temps de rétention (sec) : }}
+            <sup><i class="fa fa-question-circle tooltips" title="{{Temps minimum avant de prendre la valeur d'une autre gateway avec un moins bon RSSI.}}"></i></sup>
+            </label>
+            <div class="col-lg-5">
+                <input type="text" class="configKey form-control" data-l1key="multi_gw_retention_time">
+            </div>
+        </div>
+
+        <div class="row form-group">
+            <label class="col-lg-4 control-label"></label>
+            <label class="col-lg-8 control-label center-right"><i>{{Github Version}} : <?php echo OMG_VERSION;?></i></label>
         </div>
 
 

@@ -1347,15 +1347,20 @@ class openmqttgateway extends eqLogic {
         // ----- Stock dans la liste des gateways qui voient l'objet
         // TBC
         
+        // ----- Recupérer les valeurs du cycle d'hystérésis
+        $v_rssi_hysteresis = config::byKey('multi_gw_rssi_hysteresis', 'openmqttgateway', '');
+        $v_retention_time = config::byKey('multi_gw_retention_time', 'openmqttgateway', '');
         
         // ----- Regarde si c'est une nouvelle gateway avec un meilleur rssi
         $v_bgw_name = $p_gateway->omgGetConf('gateway_mqtt_topic');
         $v_rssi = $p_attributes['rssi'];
         if ($v_bgw_name != $v_best_gateway) {
-          if ($v_best_gateway_rssi > $p_attributes['rssi']) {
-            // ----- Si l'ancien message date de plus de 5 minutes alors on prend en compte le nouveau quand même
-            // TBC : à adapter ...
-            if ((time() - $v_best_gateway_ts) > (5*60)) {
+          if (($v_best_gateway_rssi - $v_rssi_hysteresis) > $p_attributes['rssi']) {
+            // ----- Si l'ancien message date de plus de 1 minute alors on prend en compte le nouveau quand même
+            // Normalement l'émission BLE est reçue par toutes les gateways, donc si celle qui était la plus proche n'a rien
+            // reçue depuis 1 minutes alors certainement l'objet a bougé et il faut prendre l'autre valeur. Ou la gateway
+            // n'emet plus pour cet objet.
+            if ((time() - $v_best_gateway_ts) > $v_retention_time) {
               openmqttgateway::log('debug', "Message venant d'une Gateway (".$v_bgw_name.") avec un moins bon rssi (".$v_rssi."/".$v_best_gateway_rssi."). Mais plus de message de la precedente.");
             }
             else {

@@ -44,6 +44,14 @@ function openmqttgateway_install() {
     config::save('gateway_auto_discover', 1, 'openmqttgateway');
   }
   
+  if (config::byKey('multi_gw_retention_time', 'openmqttgateway', '') == '') {
+    config::save('multi_gw_retention_time', 60, 'openmqttgateway');
+  }
+  
+  if (config::byKey('multi_gw_rssi_hysteresis', 'openmqttgateway', '') == '') {
+    config::save('multi_gw_rssi_hysteresis', 5, 'openmqttgateway');
+  }
+  
   // ----- Fixe le topic dans le plugIn Mqtt2
   if (class_exists('mqtt2')) {
     mqtt2::addPluginTopic('openmqttgateway', $v_mqtt_topic);
