@@ -9,7 +9,8 @@ Ce plugin permet de gérer les objets BLE découvert par une passerelle de type Op
 
 ### Multi-Gateways
 
-Lorsque le réseau possède plusieurs Gateways et qu'un objet est vu par plusieurs d'entre elles, alors le plugin ne prend en considération les nouvelles mesures uniquement si la puissance du signal reçu est meilleur avec la nouvelle gateway.
+Lorsque le réseau possède plusieurs Gateways et qu'un objet est vu par plusieurs d'entre elles, alors le plugin ne prend en considération les nouvelles mesures uniquement si la puissance du signal reçu est meilleur avec la nouvelle gateway (par défaut d'au moins 5dBm). Ou que la gateway de référence n'a plus communiqué pendant un temps donné (par défaut de 60 secondes).
+Ces paramètres du cycle d'hystérésis sont configurables dans les paramètres du plugin.
 
 ### Change Logs
 
