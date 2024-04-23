@@ -119,7 +119,7 @@ function addCmdToTable(_cmd) {
     id: $('.eqLogicAttr[data-l1key=id]').value(),
     filter: {type: 'info'},
     error: function (error) {
-      $('#div_alert').showAlert({message: error.message, level: 'danger'});
+      $('#div_alert').showAlert({message: '1'+error.message, level: 'danger'});
     },
     success: function (result) {
       tr.find('.cmdAttr[data-l1key=value]').append(result);
@@ -146,7 +146,7 @@ $('.eqLogicAction[data-action=cp_add_gateway]').off('click').on('click', functio
         type: eqType,
         eqLogics: [{name: result,configuration: '{"type":"gateway"}'}],
         error: function (error) {
-          $('#div_alert').showAlert({message: error.message, level: 'danger'});
+          $('#div_alert').showAlert({message: '2'+error.message, level: 'danger'});
         },
         success: function (_data) {
           var vars = getUrlVars();
@@ -172,7 +172,7 @@ $('.eqLogicAction[data-action=cp_add_device]').off('click').on('click', function
         type: eqType,
         eqLogics: [{name: result,configuration: '{"type":"device"}'}],
         error: function (error) {
-          $('#div_alert').showAlert({message: error.message, level: 'danger'});
+          $('#div_alert').showAlert({message: '3'+error.message, level: 'danger'});
         },
         success: function (_data) {
           var vars = getUrlVars();
@@ -225,7 +225,7 @@ function omg_device_remove_all() {
     },
     success: function (data) {
       if (data.state != 'ok') {
-        $('#div_alert').showAlert({message: data.result, level: 'danger'});
+        $('#div_alert').showAlert({message: '4'+data.result, level: 'danger'});
         return;
       }
       /*

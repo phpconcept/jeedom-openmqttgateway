@@ -51,7 +51,7 @@ function omg_modal_inclusion_scan_start() {
     },
     success: function (data) {
       if (data.state != 'ok') {
-        $('#div_alert').showAlert({message: data.result, level: 'danger'});
+        $('#div_alert').showAlert({message: 'omg_modal_inclusion_scan_start()'+data.result, level: 'danger'});
         return;
       }
       
@@ -90,7 +90,7 @@ function omg_modal_inclusion_scan_stop() {
     },
     success: function (data) {
       if (data.state != 'ok') {
-        $('#div_alert').showAlert({message: data.result, level: 'danger'});
+        $('#div_alert').showAlert({message: 'omg_modal_inclusion_scan_stop()'+data.result, level: 'danger'});
         return;
       }
       
@@ -128,7 +128,7 @@ function omg_modal_inclusion_finish() {
     },
     success: function (data) {
       if (data.state != 'ok') {
-        $('#div_alert').showAlert({message: data.result, level: 'danger'});
+        $('#div_alert').showAlert({message: 'omg_modal_inclusion_finish()'+data.result, level: 'danger'});
         return;
       }
       
@@ -163,10 +163,9 @@ function omg_modal_inclusion_scan_get_list() {
     },
     success: function (data) {
       if (data.state != 'ok') {
-        $('#div_alert').showAlert({message: data.result, level: 'danger'});
+        $('#div_alert').showAlert({message: 'omg_modal_inclusion_scan_get_list()'+data.result, level: 'danger'});
         return;
-      }
-      
+      }      
       
       v_val = data.result;
       v_data = JSON.parse(v_val);
@@ -193,11 +192,12 @@ function omg_modal_inclusion_scan_add(p_id) {
     },
     dataType: 'json',
     error: function (request, status, error) {
+    alert('err:'+error);
       handleAjaxError(request, status, error);
     },
     success: function (data) {
       if (data.state != 'ok') {
-        $('#div_alert').showAlert({message: data.result, level: 'danger'});
+        $('#div_alert').showAlert({message: 'omg_modal_inclusion_scan_add()'+data.result, level: 'danger'});
         return;
       }
       

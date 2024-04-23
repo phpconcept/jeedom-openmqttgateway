@@ -23,7 +23,7 @@
   <div class="row form-group">
     <label class="col-sm-2 control-label">{{MQTT Topic :}}</label>
     <div class="col-sm-7">
-      <span>bt/BTtoMQTT/</span><input type="text" class="cp_attr_device eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="device_mqtt_topic" placeholder="{{Nom du topic pour cet objet}}"/>      
+      <input type="text" class="cp_attr_device eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="device_mqtt_topic" placeholder="{{Nom du topic pour cet objet}}"/>      
     </div>
   </div>
 
