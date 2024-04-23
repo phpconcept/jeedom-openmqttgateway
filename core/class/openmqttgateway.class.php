@@ -882,7 +882,23 @@ class openmqttgateway extends eqLogic {
       if (is_null($this->_pre_save_cache)) {
         openmqttgatewaylog::log('debug', "postSaveDevice() : new device saved in DB.");
         
-        // TBC        
+        // ----- Create default online status command
+        $v_cmd = $this->omgCmdCreate('online_status', ['name'=>'online_status',
+                                    'type'=>'info',
+                                    'subtype'=>'binary', 
+                                    'isHistorized'=>1, 
+                                    'isVisible'=>1]);
+        $this->checkAndUpdateCmd('online_status', 0);
+
+        // ----- Create default online status command
+        $v_cmd = $this->omgCmdCreate('rssi', ['name'=>'rssi',
+                                    'type'=>'info',
+                                    'subtype'=>'numeric', 
+                                    'isHistorized'=>1, 
+                                    'isVisible'=>1]);
+        $this->checkAndUpdateCmd('rssi', -199);
+
+         
         
       }
       
@@ -909,7 +925,7 @@ class openmqttgateway extends eqLogic {
           
       }
       
-      openmqttgatewaylog::log('debug', "postSave() device done");
+      openmqttgatewaylog::log('debug', "postSaveDevice() done");
     }
 
     public function postSaveGateway() {
