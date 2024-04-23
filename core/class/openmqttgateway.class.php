@@ -886,16 +886,16 @@ class openmqttgateway extends eqLogic {
         $v_cmd = $this->omgCmdCreate('online_status', ['name'=>'online_status',
                                     'type'=>'info',
                                     'subtype'=>'binary', 
-                                    'isHistorized'=>1, 
-                                    'isVisible'=>1]);
+                                    'isHistorized'=>0, 
+                                    'isVisible'=>0]);
         $this->checkAndUpdateCmd('online_status', 0);
 
         // ----- Create default online status command
         $v_cmd = $this->omgCmdCreate('rssi', ['name'=>'rssi',
                                     'type'=>'info',
                                     'subtype'=>'numeric', 
-                                    'isHistorized'=>1, 
-                                    'isVisible'=>1]);
+                                    'isHistorized'=>0, 
+                                    'isVisible'=>0]);
         $this->checkAndUpdateCmd('rssi', -199);
 
          
