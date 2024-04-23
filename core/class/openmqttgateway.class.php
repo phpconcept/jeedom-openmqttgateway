@@ -501,6 +501,7 @@ class openmqttgateway extends eqLogic {
 
       $v_jeedom_device->setConfiguration('device_brand', 'Generic');
       $v_jeedom_device->setConfiguration('device_model', 'Generic');
+      $v_jeedom_device->setConfiguration('device_brand_model', 'Generic:Generic');
 
       //$v_jeedom_device->batteryStatus(50);
       
@@ -606,6 +607,36 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
+    static function omgDeviceBrandInfo($p_brand_model_name) {
+
+      $v_brand_model_name = str_replace(':', '__', $p_brand_model_name);
+      $v_filename = dirname(__FILE__) . '/../config/devices/models/'.$v_brand_model_name.'.json';
+      
+      if (($v_content = @file_get_contents($v_filename)) === false) {
+        return(null);
+      }
+
+      //openmqttgateway::log('debug', "Device brand '".$p_brand_model_name."' content : ".$v_content);
+      
+      $v_brand_model = json_decode($v_content, true);
+      if (json_last_error() != JSON_ERROR_NONE) {
+       openmqttgateway::log('error', "Erreur dans le format json du fichier '".$v_filename."' (".json_last_error_msg().")");
+       return(null);
+      }
+      
+      openmqttgateway::log('debug', "Device brand '".$p_brand_model_name."' info : ".json_encode($v_brand_model));
+      
+      return($v_brand_model);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceBrandBestMatch()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
     static function omgDeviceBrandBestMatch($p_attributes) {
     
       $v_list = openmqttgateway::omgDeviceBrandSearchList();
@@ -665,7 +696,9 @@ class openmqttgateway extends eqLogic {
         
       }
       
-      return($v_best_match_name);
+      $v_brand_model = openmqttgateway::omgDeviceBrandInfo($v_best_match_name);
+      
+      return([$v_brand_model, $v_best_match_count]);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -753,8 +786,10 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('best_gateway_ts', time()); // ts : timestamp
         
         $this->setConfiguration('brand_auto_discover', 1);
-        $this->setConfiguration('device_brand', 'Generic');
-        $this->setConfiguration('device_model', 'Generic');
+        $this->setConfiguration('device_brand_model', 'Generic:Generic');
+        $this->setConfiguration('device_brand_score', 0);
+        //$this->setConfiguration('device_brand', 'Generic');
+        //$this->setConfiguration('device_model', 'Generic');
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1027,13 +1062,17 @@ class openmqttgateway extends eqLogic {
      * Non obligatoire permet d'associer une icone custom pour l'objet
      */
 	public function getImage() {
-        $v_type = $this->omgGetType();
-        $v_icon = $this->omgGetConf('device_icon');
-	  	$file = 'plugins/openmqttgateway/core/config/devices/images/'.$v_icon.'.png';
-		if(!file_exists(__DIR__.'/../../../../'.$file)){
-			return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
-		}
-		return $file;
+      if ($this->omgIsType('gateway')) {
+        return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
+      }
+      
+      $v_type = $this->omgGetType();
+      $v_icon = $this->omgGetConf('device_icon');
+      $file = 'plugins/openmqttgateway/core/config/devices/'.$v_icon;
+      if (($v_icon == '') || (!file_exists(__DIR__.'/../../../../'.$file))) {
+        return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
+      }
+      return $file;
 	}
 
     /*
@@ -1503,39 +1542,39 @@ class openmqttgateway extends eqLogic {
         }
       }
       
+      $v_current_brand_model_name = $this->omgGetConf('device_brand_model');
+      $v_current_brand_score = $this->omgGetConf('device_brand_score');
       $v_brand_auto_discover = $this->omgGetConf('brand_auto_discover');
+      $v_brand_model = null;
       
       if ($v_brand_auto_discover) {
       
-        openmqttgateway::omgDeviceBrandBestMatch($p_attributes);
+        [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_attributes);
+        //openmqttgateway::log('debug', "Auto-discover brand_model : '".$v_brand_model['name']."','".$v_brand_model['icon']."'"); 
         
-        $v_brand = $this->omgGetConf('device_brand');
-        $v_model = $this->omgGetConf('device_model');
-        $v_icon = $this->omgGetConf('device_icon');
+        if (($v_brand_model != null) 
+             && ($v_current_brand_model_name != $v_brand_model['name']) 
+             && ($v_current_brand_score < $v_brand_score))  {
         
-        if (($v_brand=='') && ($v_model == '') && ($v_model_id == '')) {
-          // ----- Look for attributes to recognize devices
-          if (   isset($p_attributes['brand']) && ($p_attributes['brand'] == 'Xiaomi')
-              && isset($p_attributes['model']) && ($p_attributes['model'] == 'TH Sensor')
-              && isset($p_attributes['model_id']) && (strpos($p_attributes['model_id'], 'LYWSD03MMC') !== False) ) {
-            // Its an ATC like device
-            $v_brand = 'Xiaomi';
-            $v_model = 'TH Sensor';
-            if (strpos($p_attributes['model_id'], 'MMC_ATC') !== False) {
-              $v_model_id = 'LYWSD03MMC_ATC';
-            }
-            else {
-              $v_model_id = 'LYWSD03MMC';
-            }
-            $v_icon = 'LYWSD03MMC';
+            openmqttgateway::log('debug', "Swap de brand_model '".$v_current_brand_model_name."' à '".$v_brand_model['name']."'"); 
             
-          }
-          
-          $this->setConfiguration('device_brand', $v_brand);
-          $this->setConfiguration('device_model', $v_model);
-          $this->setConfiguration('device_icon', $v_icon);
-          $this->save();
+            $this->setConfiguration('device_brand_model', $v_brand_model['name']);
+            $this->setConfiguration('device_brand_score', $v_brand_score);
+            $this->setConfiguration('device_icon', $v_brand_model['icon']);
+            $this->save();
+            
         }
+        else if ($v_brand_model != null) {
+          openmqttgateway::log('debug', "Swap de brand_model ? non pas mieux (new='".$v_brand_model['name']."','".$v_brand_score."')"); 
+        }
+        else {
+          openmqttgateway::log('debug', "Swap de brand_model ? non pas de proposition."); 
+        }
+        
+      }
+      
+      if ($v_brand_model == null) {
+        // TBC : load brand model by name
       }
 
       

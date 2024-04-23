@@ -355,8 +355,7 @@ function saveEqLogic(_eqLogic) {
   var v_att_to_save = { "device" : 
                           {"device_mqtt_topic":1,
                            "cmd_auto_discover":1,
-                           "device_brand":1,
-                           "device_model":1,
+                           "device_brand_model":1,
                            "brand_auto_discover":1,
                            "____________":1
                           }

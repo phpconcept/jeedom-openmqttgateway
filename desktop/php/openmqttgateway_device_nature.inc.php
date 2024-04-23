@@ -14,16 +14,9 @@
   </div>
 
   <div class="row form-group">
-    <label class="col-sm-4 control-label">{{Fabriquant :}}</label>
+    <label class="col-sm-4 control-label">{{Fabriquant et Modèle :}}</label>
     <div class="col-sm-5">
-      <input type="text" class="cp_attr_device eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="device_brand"/>      
-    </div>
-  </div>
-
-  <div class="row form-group">
-    <label class="col-sm-4 control-label">{{Modèle :}}</label>
-    <div class="col-sm-5">
-      <input type="text" class="cp_attr_device eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="device_model"/>      
+      <input type="text" class="cp_attr_device eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="device_brand_model"/>      
     </div>
   </div>
 
@@ -33,4 +26,5 @@
       <input type="checkbox" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="brand_auto_discover" checked/>      
     </div>
   </div>
+
 

@@ -12,6 +12,9 @@
   include dirname(__FILE__) . '/Xiaomi.inc.php';
   $v_device_search_json .= $v_device_json;
 
+  $v_device_search_json .= ',';
+  include dirname(__FILE__) . '/iTag.inc.php';
+  $v_device_search_json .= $v_device_json;
 
 /*
   $v_device_search_json .= ',';

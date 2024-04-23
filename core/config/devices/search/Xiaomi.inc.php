@@ -27,7 +27,7 @@
   $v_device_json = <<<MYTEXT
 
     {
-      "name" : "Xiaomi_LYWSD03MMC_ATC",
+      "name" : "Xiaomi:LYWSD03MMC_ATC",
       "search_by_attribute_name_value" : [
         {"name":"brand", "value":"Xiaomi", "operator":"eq"},
         {"name":"model", "value":"TH Sensor", "operator":"eq"},
@@ -36,7 +36,7 @@
     },
 
     {
-      "name" : "Xiaomi_LYWSD03MMC_ATC",
+      "name" : "Xiaomi:LYWSD03MMC_ATC",
       "search_by_attribute_name_value" : [
         {"name":"brand", "value":"Xiaomi", "operator":"eq"},
         {"name":"model", "value":"TH Sensor", "operator":"eq"},
@@ -47,7 +47,7 @@
     },
 
     {
-      "name" : "Xiaomi_LYWSD03MMC",
+      "name" : "Xiaomi:LYWSD03MMC",
       "search_by_attribute_name_value" : [
         {"name":"name", "value":"LYWSD03MMC", "operator":"eq"}
       ]               
