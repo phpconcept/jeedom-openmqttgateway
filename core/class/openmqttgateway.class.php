@@ -499,8 +499,8 @@ class openmqttgateway extends eqLogic {
       $v_jeedom_device->setConfiguration('type', 'device');
       $v_jeedom_device->setConfiguration('device_mqtt_topic', $p_mqtt_id);
 
-      $v_jeedom_device->setConfiguration('device_brand', '');
-      $v_jeedom_device->setConfiguration('device_model', '');
+      $v_jeedom_device->setConfiguration('device_brand', 'Generic');
+      $v_jeedom_device->setConfiguration('device_model', 'Generic');
 
       //$v_jeedom_device->batteryStatus(50);
       
@@ -556,14 +556,14 @@ class openmqttgateway extends eqLogic {
     static function omgDeviceBrandSearchList() {
         
       // ----- Inclure la liste des devices
-      include dirname(__FILE__) . '/../../core/config/devices/device_search.inc.php';
+      include dirname(__FILE__) . '/../../core/config/devices/search/device_search.inc.php';
 
       //openmqttgateway::log('debug', "json:".print_r($v_device_search_json ,true));
       openmqttgateway::log('debug', "json:".$v_device_search_json);
 
       $v_list = json_decode($v_device_search_json, true);
       if (json_last_error() != JSON_ERROR_NONE) {
-       openmqttgateway::log('error', "Erreur dans le format json du fichier 'core/config/device_search.inc.php' (".json_last_error_msg().")");
+       openmqttgateway::log('error', "Erreur dans le format json du fichier 'core/config/search/device_search.inc.php' (".json_last_error_msg().")");
        $v_list = array();
       }
       
@@ -610,7 +610,6 @@ class openmqttgateway extends eqLogic {
     
       $v_list = openmqttgateway::omgDeviceBrandSearchList();
       
-      //$v_list = openmqttgateway::omgDeviceBrandList();
       $v_best_match_name = '';
       $v_best_match_count = 0;
       
@@ -665,7 +664,8 @@ class openmqttgateway extends eqLogic {
         }
         
       }
-        
+      
+      return($v_best_match_name);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -752,7 +752,9 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('best_gateway_rssi', -199);
         $this->setConfiguration('best_gateway_ts', time()); // ts : timestamp
         
-        $this->setConfiguration('brand_search', 1);
+        $this->setConfiguration('brand_auto_discover', 1);
+        $this->setConfiguration('device_brand', 'Generic');
+        $this->setConfiguration('device_model', 'Generic');
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1501,9 +1503,9 @@ class openmqttgateway extends eqLogic {
         }
       }
       
-      $v_brand_search = $this->omgGetConf('brand_search');
+      $v_brand_auto_discover = $this->omgGetConf('brand_auto_discover');
       
-      if ($v_brand_search) {
+      if ($v_brand_auto_discover) {
       
         openmqttgateway::omgDeviceBrandBestMatch($p_attributes);
         

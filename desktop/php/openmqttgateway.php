@@ -159,25 +159,24 @@ $eqLogics = eqLogic::byType($plugin->getId());
       		</div>
       	</div>
             
+        <div class="row form-group">
+          <label class="col-sm-4 control-label">{{Notes}}</label>
+          <div class="col-sm-8">
+            <textarea class="cp_attr_device eqLogicAttr form-control input-sm" data-l1key="configuration" data-l2key="notes" style="height : 33px;" ></textarea>
+          </div>
+        </div>
+
     </div>
     <!-- End Left column -->
     
     <!-- Right column -->
     <div class="col-sm-6">
     
-      <div class="form-group">
-          <div class="col-sm-12">
-                 <div style="background-color: #039be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Propriétés}} <span class="cp_panel_device">{{de l'objet}}</span><span class="cp_panel_gateway">{{de la Gateway}}</span></div>
+  <!-- Additional rows depending on objects type -->
+          <div class="cp_panel_device" style="display:none;">
+    	  <?php include_file('desktop', 'openmqttgateway_device_nature.inc', 'php', 'openmqttgateway'); ?>
           </div>
-      </div>
-
-    <div class="row form-group">
-      <label class="col-sm-3 control-label">{{Notes}}</label>
-      <div class="col-sm-9">
-        <textarea class="cp_attr_device eqLogicAttr form-control input-sm" data-l1key="configuration" data-l2key="notes" style="height : 33px;" ></textarea>
-      </div>
-    </div>
-
+    
 
     </div>
     <!-- Right column -->
