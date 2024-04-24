@@ -342,6 +342,57 @@ function cp_device_display_init() {
     
 }
 
+function omg_mqtt_info_change() {
+
+  var v_value = $('#omg_mqtt_info').value();
+  //console.log('mqtt_info :'+v_value);
+  
+  if (v_value != '') {
+    v_data = JSON.parse(v_value);
+    
+    v_html = '<br>';
+    for (var i in v_data) {
+      //v_html += i+' : '+v_data[i]+'<br>';
+      
+      v_html += '<div class="row form-group">';
+      v_html += '  <label class="col-sm-2 control-label">'+i+' :</label>';
+      v_html += '  <span class="col-sm-7">'+v_data[i]+'</span>';
+      v_html += '</div>';
+
+      
+    }
+    
+    $('#omg_mqtt_info_table').html(v_html);
+    $('#omg_mqtt_info_table').show();
+  }
+  else {
+    $('#omg_mqtt_info_table').html('');
+    $('#omg_mqtt_info_table').hide();
+  }
+
+
+}
+
+/*
+$("#omg_mqtt_info").change( function() {
+
+  var v_value = $('#omg_mqtt_info').value();
+  console.log('mqtt_info :'+v_value);
+  
+  if (v_value != '') {
+    //cp_equipement_display_init();
+    // Need some delay for all the attributes of the objects to be loaded
+    console.log('pas vide');
+    //$('#omg_mqtt_info_table').show();
+  }
+  else {
+    $('#omg_mqtt_info_table').html('');
+    //$('#omg_mqtt_info_table').hide();
+    console.log(' vide');
+  }
+
+});
+*/
 
 
 /*

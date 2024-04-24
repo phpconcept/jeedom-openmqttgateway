@@ -35,10 +35,18 @@
   </div>
 
   <div class="row form-group">
-    <label class="col-sm-4 control-label">{{Auto-découverte du fabriquant et du modèle :}}</label>
+    <label class="col-sm-4 control-label">{{Auto-découverte du modèle :}}</label>
     <div class="col-sm-8">
       <input type="checkbox" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="brand_auto_discover" checked/>      
     </div>
   </div>
+
+  <div class="row form-group">
+    <label class="col-sm-4 control-label">{{Auto-découverte des commandes :}}</label>
+    <div class="col-sm-8">
+      <input type="checkbox" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="cmd_auto_discover" checked/>      
+    </div>
+  </div>
+
 
 

@@ -918,6 +918,7 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('device_brand_score', 0);
 
         $this->setConfiguration('mqtt_info', array());
+        $this->setStatus('mqtt_info', '');
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1790,7 +1791,9 @@ class openmqttgateway extends eqLogic {
       }
       
       // ----- Récupérer les infos actuelle mqtt_info
-      $v_mqtt_info = $this->omgGetConf('mqtt_info');
+      //$v_mqtt_info = $this->omgGetConf('mqtt_info');
+      $v_mqtt_info_json = $this->getStatus('mqtt_info');
+      $v_mqtt_info = json_decode($v_mqtt_info_json, true);
       if (!is_array($v_mqtt_info)) $v_mqtt_info = array();
       $v_mqtt_info_change_flag = false;
 
@@ -1852,7 +1855,9 @@ class openmqttgateway extends eqLogic {
       
       if ($v_mqtt_info_change_flag) {
         $this->setConfiguration('mqtt_info', $v_mqtt_info);
-        $v_save_device_flag = true;
+        
+        $this->setStatus('mqtt_info', json_encode($v_mqtt_info));
+        
         //$this->save();
         $v_save_device_flag = true;
       }

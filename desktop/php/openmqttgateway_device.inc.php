@@ -9,7 +9,7 @@
 
   <div class="row">
     <div class="col-sm-12">
-      <div style="background-color: #039be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Propriétés de l'objet}}</div>
+      <div style="background-color: #039be5; padding: 2px 5px; color: white; margin: 10px 0; font-weight: bold;">{{Propriétés MQTT de l'objet}}</div>
     </div>
   </div>
 
@@ -27,19 +27,15 @@
     </div>
   </div>
 
-  <div class="row form-group">
-    <label class="col-sm-2 control-label">{{Auto-découverte des commandes :}}</label>
-    <div class="col-sm-7">
-      <input type="checkbox" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="cmd_auto_discover" checked/>      
+  <input type="hidden" id="omg_mqtt_info" class="cp_attr_device eqLogicAttr "  data-l1key="status" data-l2key="mqtt_info" onChange="omg_mqtt_info_change();"></input>
+
+  <div id="omg_mqtt_info_table">
+    <!-- Sera remplie par javascript en fonction des mqtt_info -->
+    <div class="row form-group">
+      <label class="col-sm-2 control-label">One :</label>
+      <span class="col-sm-7">Two</span>
     </div>
   </div>
 
-
-
-
-
-  <div class="row form-group">
-    <label class="col-sm-2 control-label">&nbsp;</label>
-  </div>
 
 

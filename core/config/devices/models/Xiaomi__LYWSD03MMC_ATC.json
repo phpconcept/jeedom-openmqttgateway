@@ -36,7 +36,7 @@
     "batt" : {"type":"battery"}
   },
   "attributes_to_ignore" : ["type"],
-  "attributes_are_mqtt_info" : ["brand", "model", "model_id", "mac"],
+  "attributes_are_mqtt_info" : ["name", "brand", "model", "model_id", "mac"],
   "other_attributes_are_cmd" : true
 }
 

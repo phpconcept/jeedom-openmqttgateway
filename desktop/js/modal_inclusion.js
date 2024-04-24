@@ -192,7 +192,7 @@ function omg_modal_inclusion_scan_add(p_id) {
     },
     dataType: 'json',
     error: function (request, status, error) {
-    alert('err:'+error);
+      //alert('err:'+error);
       handleAjaxError(request, status, error);
     },
     success: function (data) {
