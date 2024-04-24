@@ -34,6 +34,9 @@
                       "isVisible":0,
                       "icon":"<i class=\"fas fa-thermometer-half\"><\/i>"}},
     "batt" : {"type":"battery"}
-  }
+  },
+  "attributes_to_ignore" : ["type"],
+  "attributes_are_mqtt_info" : ["brand", "model", "model_id", "mac"],
+  "other_attributes_are_cmd" : true
 }
 

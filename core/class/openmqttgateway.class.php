@@ -42,7 +42,7 @@ class openmqttgateway extends eqLogic {
     
     }
      
-     
+/*     
     public static function cron5() {
         
       // ----- Recalculate mode for each device
@@ -52,7 +52,7 @@ class openmqttgateway extends eqLogic {
       }
 
 	}
-
+*/
 
     /*
      * Fonction exécutée automatiquement toutes les 5,10,15 minutes par Jeedom
@@ -546,28 +546,107 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandIsAcceptedCmd()
+     * Method : omgDeviceBrandAttIsCmd()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandIsAcceptedCmd($p_brand_info, $p_cmd_id) {
+    static function omgDeviceBrandAttIsCmd($p_brand_info, $p_cmd_id) {
+    
+      if (isset($p_brand_info['attributes'])) {
+        foreach ($p_brand_info['attributes'] as $v_key => $v_attribute) {
+        
+          if ($v_key != $p_cmd_id) continue;
+          
+          if ($v_attribute['type'] == 'cmd') {
+            return(true);
+          }
+          else {
+            return(false);
+          }
+          /*
+          // ----- Si c'est une information battery, ce n'est pas une commande
+          if ($v_attribute['type'] == 'battery') {
+            return(false);
+          }
+          // ----- Si c'est une information mqtt statique, ce n'est pas une commande
+          if ($v_attribute['type'] == 'mqtt_info') {
+            return(false);
+          }
+          */
+        }
+      }
+      
       // TBC
       return(true);
     }
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandIsBatteryAtt()
+     * Method : omgDeviceBrandAttIsBattery()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandIsBatteryAtt($p_brand_info, $p_cmd_id) {
-      // TBC
+    static function omgDeviceBrandAttIsBattery($p_brand_info, $p_cmd_id) {
+      if (isset($p_brand_info['attributes'])) {
+        foreach ($p_brand_info['attributes'] as $v_key => $v_attribute) {
+        
+          if ($v_key != $p_cmd_id) continue;
+          
+          if ($v_attribute['type'] == 'battery') {
+            return(true);
+          }
+          else {
+            return(false);
+          }
+        }
+      }
       return(false);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceBrandGetAttType()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    static function omgDeviceBrandGetAttType($p_brand_info, $p_cmd_id) {
+      // ----- Cas specifiques
+      if (in_array($p_cmd_id, ['rssi'])) {
+        return('cmd');
+      }
+      if (in_array($p_cmd_id, ['id'])) {
+        return('mqtt_info');
+      }
+      
+      if (isset($p_brand_info['attributes'])) {
+        foreach ($p_brand_info['attributes'] as $v_key => $v_attribute) {
+          if ($v_key == $p_cmd_id) {
+            return($v_attribute['type']);
+          }
+        }
+      }
+      
+      if ((isset($p_brand_info['attributes_to_ignore'])) 
+          && (in_array($p_cmd_id, $p_brand_info['attributes_to_ignore']))) {
+        return('ignore');
+      }
+      
+      if ((isset($p_brand_info['attributes_are_mqtt_info'])) 
+          && (in_array($p_cmd_id, $p_brand_info['attributes_are_mqtt_info']))) {
+        return('mqtt_info');
+      }
+            
+      if (!isset($p_brand_info['other_attributes_are_cmd']) || $p_brand_info['other_attributes_are_cmd']) {
+        return('cmd');
+      }
+      
+      return('unknown');
     }
     /* -------------------------------------------------------------------------*/
 
@@ -837,8 +916,8 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('brand_auto_discover', 1);
         $this->setConfiguration('device_brand_model', 'Generic:Generic');
         $this->setConfiguration('device_brand_score', 0);
-        //$this->setConfiguration('device_brand', 'Generic');
-        //$this->setConfiguration('device_model', 'Generic');
+
+        $this->setConfiguration('mqtt_info', array());
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -1634,6 +1713,8 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
+      $v_save_device_flag = false;
+       
       $v_best_gateway = $this->omgGetConf('best_gateway');
       $v_best_gateway_rssi = $this->omgGetConf('best_gateway_rssi');
       $v_best_gateway_ts = $this->omgGetConf('best_gateway_ts');
@@ -1690,14 +1771,7 @@ class openmqttgateway extends eqLogic {
         
             openmqttgateway::log('debug', "Swap de brand_model '".$v_current_brand_model_name."' à '".$v_brand_model['name']."'"); 
             
-            $this->omgDeviceBrandChange($v_brand_model, $v_brand_score);
-            /*
-            $this->setConfiguration('device_brand_model', $v_brand_model['name']);
-            $this->setConfiguration('device_brand_score', $v_brand_score);
-            $this->setConfiguration('device_icon', $v_brand_model['icon']);
-            $this->save();
-            */
-            
+            $this->omgDeviceBrandChange($v_brand_model, $v_brand_score);            
         }
         else if ($v_brand_model != null) {
           openmqttgateway::log('debug', "Swap de brand_model ? non pas mieux (new='".$v_brand_model['name']."','".$v_brand_score."')"); 
@@ -1714,26 +1788,33 @@ class openmqttgateway extends eqLogic {
           return;
         }
       }
+      
+      // ----- Récupérer les infos actuelle mqtt_info
+      $v_mqtt_info = $this->omgGetConf('mqtt_info');
+      if (!is_array($v_mqtt_info)) $v_mqtt_info = array();
+      $v_mqtt_info_change_flag = false;
 
       // ----- On regarde chaque attribut pour voir s'il s'agit d'une commande, 
       // d'une info de config ou un info de batterie, ou si l'on doit ignorer
       // l'attribut
       foreach ($p_attributes as $v_key => $v_value) {
-        openmqttgateway::log('debug', "  Attribute '".$v_key."' = ".$v_value."");
+        // ----- On récupère si l'att est une cmd, de l'info batterie, autre ...
+        $v_att_type = openmqttgateway::omgDeviceBrandGetAttType($v_brand_model, $v_key);
         
-        if (openmqttgateway::omgDeviceBrandIsAcceptedCmd($v_brand_model, $v_key)) {
+        openmqttgateway::log('debug', "  Attribute '".$v_key."' (".$v_att_type.") = ".$v_value."");
+                
+        //[$v_cmd_status, $v_cmd_info] = openmqttgateway::omgDeviceBrandAttIsCmd($v_brand_model, $v_key);
+        //$v_cmd_status = openmqttgateway::omgDeviceBrandAttIsCmd($v_brand_model, $v_key);
+        
+        if ($v_att_type == 'cmd') {
 
           // ----- Look if command exists
           $v_cmd = $this->getCmd(null, $v_key);
-          if (!is_object($v_cmd) && $this->omgGetConf('cmd_auto_discover')) {            
+          if (!is_object($v_cmd) && $this->omgGetConf('cmd_auto_discover')) {           
             $v_subtype = 'string';
             if (is_string($v_value)) $v_subtype = 'string';
             if (is_numeric($v_value)) $v_subtype = 'numeric';
             $v_is_visible = 0;
-            
-            if (($v_brand=='Xiaomi') && ($v_model == 'TH Sensor') ) {
-              if (in_array($v_key, ['tempc','hum'])) {$v_is_visible=1;}
-            }
             
             $v_cmd = $this->omgCmdCreate($v_key, ['name'=>$v_key,
                                         'type'=>'info',
@@ -1748,10 +1829,32 @@ class openmqttgateway extends eqLogic {
           }
         }
 
-        else if (openmqttgateway::omgDeviceBrandIsBatteryAtt($v_brand_model, $v_key)) {
+        else if ($v_att_type == 'battery') {
           $this->batteryStatus($v_value);
         }
         
+        else if ($v_att_type == 'mqtt_info') {
+          if (!isset($v_mqtt_info[$v_key]) || ($v_mqtt_info[$v_key] != $v_value)) {
+            $v_mqtt_info[$v_key] = $v_value;
+            $v_mqtt_info_change_flag = true;
+          }
+        }
+        
+        else if ($v_att_type == 'ignore') {
+          // Nothing to do
+        }
+        
+        else {
+          // TBC : Nothing to do ?
+        }
+        
+      }
+      
+      if ($v_mqtt_info_change_flag) {
+        $this->setConfiguration('mqtt_info', $v_mqtt_info);
+        $v_save_device_flag = true;
+        //$this->save();
+        $v_save_device_flag = true;
       }
       
       openmqttgateway::log('debug', "Best rssi : ".$v_best_gateway_rssi." new rssi=".$v_rssi);
@@ -1762,6 +1865,11 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('best_gateway', $v_best);
         $this->setConfiguration('best_gateway_rssi', $v_rssi);
         $this->setConfiguration('best_gateway_ts', time());
+        //$this->save();
+        $v_save_device_flag = true;
+      }
+
+      if ($v_save_device_flag) {
         $this->save();
       }
 
