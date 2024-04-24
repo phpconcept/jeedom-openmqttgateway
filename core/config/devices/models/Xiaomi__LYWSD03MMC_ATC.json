@@ -32,7 +32,8 @@
                       "Unite":"F",
                       "isHistorized":0,
                       "isVisible":0,
-                      "icon":"<i class=\"fas fa-thermometer-half\"><\/i>"}}
-  }  
+                      "icon":"<i class=\"fas fa-thermometer-half\"><\/i>"}},
+    "batt" : {"type":"battery"}
+  }
 }
 

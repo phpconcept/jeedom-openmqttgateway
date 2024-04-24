@@ -18,7 +18,6 @@
     <div class="col-sm-8">
 
       <select id="omg_device_select_nature" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="device_brand_model">
-          <option value="Generic:Generic">Generic - Generic</option>
           <?php
             $v_brand = '';
             foreach (openmqttgateway::omgDeviceBrandList() as $v_item) {
