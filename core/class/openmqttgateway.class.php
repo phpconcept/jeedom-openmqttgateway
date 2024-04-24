@@ -580,21 +580,44 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandList() {
+    static function omgDeviceBrandList($p_name_only=false) {
         
       // ----- Inclure la liste des devices
-      include dirname(__FILE__) . '/../../core/config/devices/device_list.inc.php';
+      $v_cheminDossier = dirname(__FILE__) . '/../../core/config/devices/models';
       
-      $v_list = json_decode($v_device_list_json, true);
-      if (json_last_error() != JSON_ERROR_NONE) {
-       openmqttgateway::log('error', "Erreur dans le format json du fichier 'core/config/device_list.inc.php' (".json_last_error_msg().")");
-       $v_list = array();
-      }
-      
-      //openmqttgateway::log('debug', "json:".print_r($v_list ,true));
-      //openmqttgateway::log('debug', "json:".$v_device_list_json);
+      $v_fichiers = array();
 
-      return($v_list);
+      // Vérifier si le dossier existe
+      if (is_dir($v_cheminDossier)) {
+          // Ouvrir le dossier
+          if ($v_dh = opendir($v_cheminDossier)) {
+              // Parcourir tous les fichiers du dossier
+              while (($v_fichier = readdir($v_dh)) !== false) {
+                  // Vérifier si le fichier se termine par ".json"
+                  if (substr($v_fichier, -5) === '.json') {
+                      // Ajouter le fichier à la liste
+                      $v_name = str_replace('.json', '', $v_fichier);
+                      $v_name = str_replace('__', ':', $v_name);
+                      
+                      if ($p_name_only) {
+                        $v_fichiers[] = $v_name;
+                      }
+                      else {
+                        if (($v_info = openmqttgateway::omgDeviceBrandInfo($v_name)) !== null) {
+                          $v_fichiers[] = $v_info;
+                        }                        
+                      }
+                  }
+              }
+              // Fermer le dossier
+              closedir($v_dh);
+          }
+      }
+      else {
+        openmqttgateway::log('error', "Le dossier '".$v_cheminDossier."' n'est pas accessible.");
+      }
+
+      return($v_fichiers);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -898,7 +921,6 @@ class openmqttgateway extends eqLogic {
                                     'isVisible'=>0]);
         $this->checkAndUpdateCmd('rssi', -199);
 
-         
         
       }
       
