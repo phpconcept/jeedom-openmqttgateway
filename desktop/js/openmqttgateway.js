@@ -342,6 +342,7 @@ function cp_device_display_init() {
     
 }
 
+
 function omg_mqtt_info_change() {
 
   var v_value = $('#omg_mqtt_info').value();

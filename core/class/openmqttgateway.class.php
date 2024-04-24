@@ -21,6 +21,20 @@ require_once dirname(__FILE__) . '/../../../../core/php/core.inc.php';
 require_once dirname(__FILE__) . '/../../../../plugins/openmqttgateway/core/php/openmqttgateway.inc.php';
 
 
+    // -------------------------------------------------------------------------
+    // Function : _agv($p_item, $p_key)
+    // Description :
+    // -------------------------------------------------------------------------
+    function _agv($p_item, $p_key)
+    {
+      if (is_array($p_item) && isset($p_item[$p_key])) {
+        return($p_item[$p_key]);
+      }
+      return('');
+    }
+    // -------------------------------------------------------------------------
+  
+
 class openmqttgateway extends eqLogic {
 
     /*     * *************************Attributs****************************** */
@@ -28,6 +42,13 @@ class openmqttgateway extends eqLogic {
     * Attributs de configuration :
     */
     var $_pre_save_cache;
+    
+    // Cette variable permet de flagger que le changement de nature vient d'une
+    // fonction interne et non pas de l'utilisateur à partir du GUI
+    // Et donc on va conserver le score de detection du brand.
+    // Lorsque c'est l'utilisateur on remet le score à 0.
+    var $_no_score_reset_flag = false;
+
 
     /*     * ***********************Methode static*************************** */
 
@@ -500,29 +521,19 @@ class openmqttgateway extends eqLogic {
 
       $v_jeedom_device->setConfiguration('type', 'device');
       $v_jeedom_device->setConfiguration('device_mqtt_topic', $p_mqtt_id);
-
-/*
-      if ($v_brand_model != null) {
-        $v_jeedom_device->setConfiguration('device_brand_model', $v_brand_model['name']);
-        $v_jeedom_device->setConfiguration('device_brand_score', $v_brand_score);
-        $v_jeedom_device->setConfiguration('device_icon', $v_brand_model['icon']);
-      }
-      else {
-        $v_jeedom_device->setConfiguration('device_brand_model', 'Generic:Generic');
-        $v_jeedom_device->setConfiguration('device_brand_score', 0);
-        $v_jeedom_device->setConfiguration('device_icon', '');
-      }
-*/
-      //$v_jeedom_device->batteryStatus(50);
       
       $v_jeedom_device->setIsEnable(1);
-      
-      $v_jeedom_device->save();
       
       // ----- Change la nature du device
       // TBC: peut-on le faire avant ?
       [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_properties);
-      $v_jeedom_device->omgDeviceBrandChange($v_brand_model, $v_brand_score);
+      if ($v_brand_model !== null) {
+        $v_jeedom_device->setConfiguration('device_brand_model', _agv($v_brand_model, 'name'));
+        $v_jeedom_device->setConfiguration('device_brand_score', $v_brand_score);
+        $v_jeedom_device->_no_score_reset_flag = true;
+      }
+      
+      $v_jeedom_device->save();
       
       $v_jeedom_device->omgDeviceUpdateAttributes($p_properties, $p_gateway);
     }
@@ -729,7 +740,7 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandBestMatch()
+     * Method : omgDeviceBrandInfo()
      * Description :
      * Parameters :
      * Returned value : 
@@ -917,7 +928,6 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('device_brand_model', 'Generic:Generic');
         $this->setConfiguration('device_brand_score', 0);
 
-        $this->setConfiguration('mqtt_info', array());
         $this->setStatus('mqtt_info', '');
         
         // ----- No data to store for postSave() tasks
@@ -939,6 +949,12 @@ class openmqttgateway extends eqLogic {
           'device_brand_model'    => $eqLogic->omgGetConf('device_brand_model'),
           'isEnable'              => $eqLogic->getIsEnable()
         );
+        
+        if (($eqLogic->omgGetConf('device_brand_model') != $this->omgGetConf('device_brand_model')) 
+            && (!$this->_no_score_reset_flag)) {
+          $this->setConfiguration('device_brand_score', 0);
+        }
+        $this->_no_score_reset_flag = false;
         
         // ----- Look if something change
         // Doing change before the save
@@ -1043,8 +1059,9 @@ class openmqttgateway extends eqLogic {
           if ($v_brand_model == null) {
             $v_brand_model = openmqttgateway::omgDeviceBrandInfo('Generic:Generic');
           }
-          $this->omgDeviceBrandChange($v_brand_model, 10);
           
+          // ----- On met à jour les commandes nécessaires
+          $this->omgDeviceBrandChange($v_brand_model);          
         }
           
         // ----- Look if device enable is changed
@@ -1222,8 +1239,9 @@ class openmqttgateway extends eqLogic {
         return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
       }
       
-      $v_type = $this->omgGetType();
-      $v_icon = $this->omgGetConf('device_icon');
+      $v_brand_model = $this->omgDeviceGetBrandInfo();
+      $v_icon = _agv($v_brand_model, 'icon');
+      
       $file = 'plugins/openmqttgateway/core/config/devices/'.$v_icon;
       if (($v_icon == '') || (!file_exists(__DIR__.'/../../../../'.$file))) {
         return 'plugins/openmqttgateway/plugin_info/openmqttgateway_icon.png';
@@ -1654,30 +1672,41 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
+     * Method : omgDeviceGetBrandInfo()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgDeviceGetBrandInfo() {
+      $v_brand_name = $this->omgGetConf('device_brand_model');
+      $v_brand_model = openmqttgateway::omgDeviceBrandInfo($v_brand_name);
+      if ($v_brand_model !== null) {
+        return($v_brand_model);
+      }
+      else {
+        openmqttgateway::log('debug', "omgDeviceGetBrandInfo() : il manque le brand model dans les config du device.");
+        return(array());
+      }
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
      * Method : omgDeviceBrandChange()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    public function omgDeviceBrandChange($p_brand_model, $p_brand_score) {
+    public function omgDeviceBrandChange($p_brand_model) {
     
       if ($p_brand_model == null) {
-        $this->setConfiguration('device_brand_model', 'Generic:Generic');
-        $this->setConfiguration('device_brand_score', 0);
-        $this->setConfiguration('device_icon', '');
-        $this->save();
+        openmqttgateway::log('debug', "omgDeviceBrandChange() : il manque le brand model.");
         return;
       }
       
       openmqttgateway::log('debug', "omgDeviceBrandChange('".$p_brand_model['name']."')");
-      
-      // ----- Fixe les propriétés
-      $this->setConfiguration('device_brand_model', $p_brand_model['name']);
-      $this->setConfiguration('device_brand_score', $p_brand_score);
-      $this->setConfiguration('device_icon', $p_brand_model['icon']);
-      $this->save();
-      
+            
       // ----- Créé les commandes si besoin
       foreach ($p_brand_model['attributes'] as $v_att_name => $v_att) {
         if (isset($v_att['type']) && isset($v_att['cmd']) && ($v_att['type'] == 'cmd')) {
@@ -1772,7 +1801,11 @@ class openmqttgateway extends eqLogic {
         
             openmqttgateway::log('debug', "Swap de brand_model '".$v_current_brand_model_name."' à '".$v_brand_model['name']."'"); 
             
-            $this->omgDeviceBrandChange($v_brand_model, $v_brand_score);            
+            $this->setConfiguration('device_brand_model', _agv($v_brand_model, 'name'));
+            $this->setConfiguration('device_brand_score', $v_brand_score);
+            $this->_no_score_reset_flag = true;
+            
+            $v_save_device_flag = true;
         }
         else if ($v_brand_model != null) {
           openmqttgateway::log('debug', "Swap de brand_model ? non pas mieux (new='".$v_brand_model['name']."','".$v_brand_score."')"); 
@@ -1854,8 +1887,6 @@ class openmqttgateway extends eqLogic {
       }
       
       if ($v_mqtt_info_change_flag) {
-        $this->setConfiguration('mqtt_info', $v_mqtt_info);
-        
         $this->setStatus('mqtt_info', json_encode($v_mqtt_info));
         
         //$this->save();
