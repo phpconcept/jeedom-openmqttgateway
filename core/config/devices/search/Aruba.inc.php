@@ -8,15 +8,12 @@
 */
 
 
-
   $v_device_json = <<<MYTEXT
 
     {
-      "name" : "Generic:iBeacon",
+      "name" : "Aruba:AssetTag",
       "search_by_attribute_name_value" : [
-        {"name":"brand", "value":"GENERIC", "operator":"eq"},
-        {"name":"model", "value":"iBeacon", "operator":"eq"},
-        {"name":"model_id", "value":"IBEACON", "operator":"eq"}
+        {"name":"id", "value":"54:6C:0E", "operator":"inc"}
       ]               
     }
 

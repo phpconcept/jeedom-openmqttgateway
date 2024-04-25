@@ -20,6 +20,10 @@
   include dirname(__FILE__) . '/Generic.inc.php';
   $v_device_search_json .= $v_device_json;
 
+  $v_device_search_json .= ',';
+  include dirname(__FILE__) . '/Aruba.inc.php';
+  $v_device_search_json .= $v_device_json;
+
 /*
   $v_device_search_json .= ',';
   include dirname(__FILE__) . '/brand_search_SAMPLE.inc.php';
