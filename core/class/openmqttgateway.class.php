@@ -976,24 +976,21 @@ class openmqttgateway extends eqLogic {
         }
         $this->_no_score_reset_flag = false;
         
+        if ($eqLogic->omgGetConf('device_brand_model') != $this->omgGetConf('device_brand_model')) {
+        
+          $v_brand_model = openmqttgateway::omgDeviceBrandInfo($this->omgGetConf('device_brand_model'));
+          if ($v_brand_model == null) {
+            $v_brand_model = openmqttgateway::omgDeviceBrandInfo('Generic:Generic');
+          }
+          
+          // ----- On met à jour les commandes nécessaires
+          $this->omgDeviceUpdateCmds($v_brand_model);     
+        }
+        
         openmqttgatewaylog::log('debug', "_pre_save_cache=".json_encode($this->_pre_save_cache));
         
-        // ----- Look if something change
-        // Doing change before the save
-        /*
-        $v_nature_fil_pilote = $this->omgGetConf('nature_fil_pilote');
-        if (   ($eqLogic->omgGetConf('nature_fil_pilote') != $v_nature_fil_pilote)
-            || (   ($v_nature_fil_pilote == 'fp_device') 
-                && ($eqLogic->omgGetConf('fp_device_id') != $this->omgGetConf('fp_device_id')))
-            || ($eqLogic->omgGetConf('lien_commutateur') != $this->omgGetConf('lien_commutateur'))
-            || ($eqLogic->omgGetConf('lien_commutateur_a') != $this->omgGetConf('lien_commutateur_a'))
-            || ($eqLogic->omgGetConf('lien_commutateur_b') != $this->omgGetConf('lien_commutateur_b')) ) {
-          $this->cpNatureChangeTo($v_nature_fil_pilote);
-        }
-        */
-  
-        
       }
+
       openmqttgatewaylog::log('debug', "preSaveDevice() done");
     }
 
@@ -1079,13 +1076,17 @@ class openmqttgateway extends eqLogic {
         // ----- Regarde si le device a changé de nature
         if ($this->_pre_save_cache['device_brand_model'] != $this->omgGetConf('device_brand_model')) {
         
+        /*
           $v_brand_model = openmqttgateway::omgDeviceBrandInfo($this->omgGetConf('device_brand_model'));
           if ($v_brand_model == null) {
             $v_brand_model = openmqttgateway::omgDeviceBrandInfo('Generic:Generic');
           }
           
           // ----- On met à jour les commandes nécessaires
-          $this->omgDeviceUpdateCmds($v_brand_model);          
+          $this->omgDeviceUpdateCmds($v_brand_model);    
+          
+          */
+                
         }
           
         // ----- Look if device enable is changed
