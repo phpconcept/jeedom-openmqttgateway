@@ -763,7 +763,7 @@ class openmqttgateway extends eqLogic {
        return(null);
       }
       
-      openmqttgateway::log('debug', "Device brand '".$p_brand_model_name."' info : ".json_encode($v_brand_model));
+      //openmqttgateway::log('debug', "Device brand '".$p_brand_model_name."' info : ".json_encode($v_brand_model));
       
       return($v_brand_model);
     }
@@ -956,6 +956,8 @@ class openmqttgateway extends eqLogic {
         }
         $this->_no_score_reset_flag = false;
         
+        openmqttgatewaylog::log('debug', "_pre_save_cache=".json_encode($this->_pre_save_cache));
+        
         // ----- Look if something change
         // Doing change before the save
         /*
@@ -1052,6 +1054,8 @@ class openmqttgateway extends eqLogic {
       else {
         openmqttgatewaylog::log('debug', "postSaveDevice() : device saved in DB.");
 
+        openmqttgatewaylog::log('debug', "Avant '".$this->_pre_save_cache['device_brand_model']."', Après '".$this->omgGetConf('device_brand_model')."'");
+
         // ----- Regarde si le device a changé de nature
         if ($this->_pre_save_cache['device_brand_model'] != $this->omgGetConf('device_brand_model')) {
         
@@ -1061,7 +1065,7 @@ class openmqttgateway extends eqLogic {
           }
           
           // ----- On met à jour les commandes nécessaires
-          $this->omgDeviceBrandChange($v_brand_model);          
+          $this->omgDeviceUpdateCmds($v_brand_model);          
         }
           
         // ----- Look if device enable is changed
@@ -1698,7 +1702,7 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    public function omgDeviceBrandChange($p_brand_model) {
+    public function omgDeviceBrandChange_SAVE($p_brand_model) {
     
       if ($p_brand_model == null) {
         openmqttgateway::log('debug', "omgDeviceBrandChange() : il manque le brand model.");
@@ -1713,7 +1717,7 @@ class openmqttgateway extends eqLogic {
 
           // ----- Look if command exists
           $v_cmd = $this->getCmd(null, $v_att['cmd']['logicalId']);
-          if (!is_object($v_cmd)) {            
+          if (!is_object($v_cmd)) {
             /*
             $v_cmd = $this->omgCmdCreate($v_att['cmd']['logicalId'], 
                                          ['name'=>$v_att['cmd']['name'],
@@ -1726,10 +1730,131 @@ class openmqttgateway extends eqLogic {
                                           */
             $v_cmd = $this->omgCmdCreate($v_att['cmd']['logicalId'], $v_att['cmd']);
           }
+          // ----- On regarde pour fixer/refixer les paramètres (type affichage, etc)
+          else {
+          /*
+          
+            foreach ($v_att['cmd'] as $v_key => $v_value) {
+              if ($v_key == 'name') {
+                $v_cmd->setName($v_value);
+              }
+              else if ($v_key == 'type') {
+                $v_cmd->setType($v_value);
+              }
+              else if ($v_key == 'subtype') {
+                $v_cmd->setSubType($v_value);
+              }
+              else if ($v_key == 'isHistorized') {
+                $v_cmd->setIsHistorized($v_value);
+              }
+              else if ($v_key == 'isVisible') {
+                $v_cmd->setIsVisible($v_value);
+              }
+              else if ($v_key == 'order') {
+                $v_cmd->setOrder($v_value);
+              }
+              else if ($v_key == 'Unite') {
+                $v_cmd->setUnite($v_value);
+              }
+              else if ($v_key == 'icon') {
+                //$v_cmd->setDisplay('icon', '<i class="'.$v_value.'"></i>');
+                $v_cmd->setDisplay('icon', $v_value);
+                $v_cmd->setDisplay('showIconAndNamedashboard', "1");          
+              }
+            }
+            
+            $v_cmd->save();
+      */
+          
+          }
+          
 
         }
       }
 
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceUpdateCmds()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgDeviceUpdateCmds($p_brand_model) {
+    
+      if ($p_brand_model == null) {
+        openmqttgateway::log('debug', "omgDeviceUpdateCmds() : il manque le brand model.");
+        return;
+      }
+      
+      openmqttgateway::log('debug', "omgDeviceUpdateCmds('".$p_brand_model['name']."')");
+            
+      // ----- Créé les commandes si besoin
+      foreach ($p_brand_model['attributes'] as $v_att_name => $v_att) {
+      
+        if (isset($v_att['type']) && isset($v_att['cmd']) && ($v_att['type'] == 'cmd')) {
+
+          // ----- Look if command exists
+          $v_cmd = $this->getCmd(null, $v_att['cmd']['logicalId']);
+          if (!is_object($v_cmd)) {
+            /*
+            $v_cmd = $this->omgCmdCreate($v_att['cmd']['logicalId'], 
+                                         ['name'=>$v_att['cmd']['name'],
+                                          'type'=>$v_att['cmd']['type'],
+                                          'subtype'=>$v_att['cmd']['subtype'], 
+                                          'Unite'=>$v_att['cmd']['Unite'], 
+                                          'isHistorized'=>$v_att['cmd']['isHistorized'], 
+                                          'isVisible'=>$v_att['cmd']['isVisible']], 
+                                          'icon'=>$v_att['cmd']['icon']]);
+                                          */
+            //$v_cmd = $this->omgCmdCreate($v_att['cmd']['logicalId'], $v_att['cmd']);
+            
+            openmqttgatewaylog::log('debug', "Create Cmd '".$v_att['cmd']['logicalId']."' for device '".$this->getName()."'.");
+            $v_cmd = new openmqttgatewayCmd();
+            $v_cmd->setLogicalId($v_att['cmd']['logicalId']);
+            $v_cmd->setEqLogic_id($this->getId());
+            
+          }
+          
+          // ----- On regarde pour fixer/refixer les paramètres (type affichage, etc)
+          
+          foreach ($v_att['cmd'] as $v_key => $v_value) {
+            if ($v_key == 'name') {
+              $v_cmd->setName($v_value);
+            }
+            else if ($v_key == 'type') {
+              $v_cmd->setType($v_value);
+            }
+            else if ($v_key == 'subtype') {
+              $v_cmd->setSubType($v_value);
+            }
+            else if ($v_key == 'isHistorized') {
+              $v_cmd->setIsHistorized(($v_value?1:0));
+            }
+            else if ($v_key == 'isVisible') {
+              $v_cmd->setIsVisible(($v_value?1:0));
+            }
+            else if ($v_key == 'order') {
+              $v_cmd->setOrder($v_value);
+            }
+            else if ($v_key == 'Unite') {
+              $v_cmd->setUnite($v_value);
+            }
+            else if ($v_key == 'icon') {
+              //$v_cmd->setDisplay('icon', '<i class="'.$v_value.'"></i>');
+              $v_cmd->setDisplay('icon', $v_value);
+              $v_cmd->setDisplay('showIconAndNamedashboard', "1");          
+            }
+          }
+          
+          $v_cmd->save();
+          
+        }
+      }
+      
+      openmqttgateway::log('debug', "omgDeviceUpdateCmds('".$p_brand_model['name']."') : done");
     }
     /* -------------------------------------------------------------------------*/
 
