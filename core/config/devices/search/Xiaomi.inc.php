@@ -42,6 +42,17 @@
         {"name":"model", "value":"TH Sensor", "operator":"eq"},
         {"name":"model_id", "value":"MMC_ATC", "operator":"inc"},
         {"name":"model_id", "value":"LYWSD03MMC", "operator":"inc"},
+        {"name":"type", "operator":"present"}
+      ]               
+    },
+
+    {
+      "name" : "Xiaomi:LYWSD03MMC_ATC",
+      "search_by_attribute_name_value" : [
+        {"name":"brand", "value":"Xiaomi", "operator":"eq"},
+        {"name":"model", "value":"TH Sensor", "operator":"eq"},
+        {"name":"model_id", "value":"MMC_ATC", "operator":"inc"},
+        {"name":"model_id", "value":"LYWSD03MMC", "operator":"inc"},
         {"name":"type", "value":"THB", "operator":"eq"}
       ]               
     },

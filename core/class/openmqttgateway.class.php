@@ -287,7 +287,7 @@ class openmqttgateway extends eqLogic {
       $v_jeedom_device->save();
       
       // ----- Create default online status command
-      $v_cmd = $v_jeedom_device->omgCmdCreate('online_status', ['name'=>'online_status',
+      $v_cmd = $v_jeedom_device->omgCmdCreate('online_status', ['name'=> __('Présent', __FILE__),
                                   'type'=>'info',
                                   'subtype'=>'binary', 
                                   'isHistorized'=>1, 
@@ -808,11 +808,31 @@ class openmqttgateway extends eqLogic {
               openmqttgateway::log('debug', "On match (eq) sur l'attribut ".$v_item['name']." ");
               $v_match_count++;
             }
+            
+            // On compare si different
+            else if (($v_operator == 'not_eq') && ($p_attributes[$v_item['name']] != $v_item['value'])) {
+              openmqttgateway::log('debug', "On match (not_eq) sur l'attribut ".$v_item['name']." ");
+              $v_match_count++;
+            }
+            
             // On compare en inclusion
             else if (($v_operator == 'inc') && (strpos($p_attributes[$v_item['name']], $v_item['value']) !== False)) {
               openmqttgateway::log('debug', "On match (inc) sur l'attribut ".$v_item['name']." ");
               $v_match_count++;
             }
+            
+            // On compare en none inclusion
+            else if (($v_operator == 'not_inc') && (strpos($p_attributes[$v_item['name']], $v_item['value']) === False)) {
+              openmqttgateway::log('debug', "On match (not_inc) sur l'attribut ".$v_item['name']." ");
+              $v_match_count++;
+            }
+            
+            // On regarde juste si l'attribut est là
+            else if ($v_operator == 'present') {
+              openmqttgateway::log('debug', "On match (present) sur l'attribut ".$v_item['name']." ");
+              $v_match_count++;
+            }
+            
             // All other 
             else {
             }
@@ -1032,7 +1052,7 @@ class openmqttgateway extends eqLogic {
         openmqttgatewaylog::log('debug', "postSaveDevice() : new device saved in DB.");
         
         // ----- Create default online status command
-        $v_cmd = $this->omgCmdCreate('online_status', ['name'=>'online_status',
+        $v_cmd = $this->omgCmdCreate('online_status', ['name'=> __('Présent', __FILE__),
                                     'type'=>'info',
                                     'subtype'=>'binary', 
                                     'isHistorized'=>0, 
@@ -1467,7 +1487,7 @@ class openmqttgateway extends eqLogic {
       
       foreach ($p_att_list as $v_key => $v_value) {
         if ($v_key == 'name') {
-          $v_cmd->setName($v_value);
+          $v_cmd->setName(__($v_value, __FILE__));
         }
         else if ($v_key == 'type') {
           $v_cmd->setType($v_value);
@@ -1822,7 +1842,7 @@ class openmqttgateway extends eqLogic {
           
           foreach ($v_att['cmd'] as $v_key => $v_value) {
             if ($v_key == 'name') {
-              $v_cmd->setName($v_value);
+              $v_cmd->setName(__($v_value, __FILE__));
             }
             else if ($v_key == 'type') {
               $v_cmd->setType($v_value);
