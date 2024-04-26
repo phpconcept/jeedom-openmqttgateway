@@ -2,6 +2,11 @@
   "name" : "Aruba:AssetTag",
   "brand" : "Aruba",
   "model" : "AssetTag",
-  "icon" : "images/aruba_tag.png"  
+  "icon" : "images/aruba_tag.png",
+  "attributes" : {
+    "present" : {"type":"cmd",
+                        "cmd":{"logicalId":"present",
+                               "isVisible":1}}
+  }
 }
 

@@ -1049,12 +1049,12 @@ class openmqttgateway extends eqLogic {
         openmqttgatewaylog::log('debug', "postSaveDevice() : new device saved in DB.");
         
         // ----- Create default online status command
-        $v_cmd = $this->omgCmdCreate('online_status', ['name'=> __('Présent', __FILE__),
-                                    'type'=>'info',
-                                    'subtype'=>'binary', 
-                                    'isHistorized'=>0, 
-                                    'isVisible'=>0]);
-        $this->checkAndUpdateCmd('online_status', 0);
+        $v_cmd = $this->omgCmdCreate('present', ['name'=> __('Présent', __FILE__),
+                                     'type'=>'info',
+                                     'subtype'=>'binary', 
+                                     'isHistorized'=>0, 
+                                     'isVisible'=>0]);
+        $this->checkAndUpdateCmd('present', 0);
 
         // ----- Create default online status command
         $v_cmd = $this->omgCmdCreate('rssi', ['name'=>'rssi',
@@ -1064,7 +1064,6 @@ class openmqttgateway extends eqLogic {
                                     'isVisible'=>0]);
         $this->checkAndUpdateCmd('rssi', -199);
 
-        
       }
       
       // ----- Look for existing device
@@ -1817,30 +1816,24 @@ class openmqttgateway extends eqLogic {
       
         if (isset($v_att['type']) && isset($v_att['cmd']) && ($v_att['type'] == 'cmd')) {
 
+          // ----- On récupère le logcalId
+          if (isset($v_att['cmd']['logicalId'])) {
+            $v_logicalId = $v_att['cmd']['logicalId'];
+          }
+          else {
+            $v_logicalId = $v_att_name;
+          }
+
           // ----- Look if command exists
-          $v_cmd = $this->getCmd(null, $v_att['cmd']['logicalId']);
+          $v_cmd = $this->getCmd(null, $v_logicalId);
           if (!is_object($v_cmd)) {
-            /*
-            $v_cmd = $this->omgCmdCreate($v_att['cmd']['logicalId'], 
-                                         ['name'=>$v_att['cmd']['name'],
-                                          'type'=>$v_att['cmd']['type'],
-                                          'subtype'=>$v_att['cmd']['subtype'], 
-                                          'Unite'=>$v_att['cmd']['Unite'], 
-                                          'isHistorized'=>$v_att['cmd']['isHistorized'], 
-                                          'isVisible'=>$v_att['cmd']['isVisible']], 
-                                          'icon'=>$v_att['cmd']['icon']]);
-                                          */
-            //$v_cmd = $this->omgCmdCreate($v_att['cmd']['logicalId'], $v_att['cmd']);
-            
-            openmqttgatewaylog::log('debug', "Create Cmd '".$v_att['cmd']['logicalId']."' for device '".$this->getName()."'.");
+            openmqttgatewaylog::log('debug', "Create Cmd '".$v_logicalId."' for device '".$this->getName()."'.");
             $v_cmd = new openmqttgatewayCmd();
-            $v_cmd->setLogicalId($v_att['cmd']['logicalId']);
+            $v_cmd->setLogicalId($v_logicalId);
             $v_cmd->setEqLogic_id($this->getId());
-            
           }
           
-          // ----- On regarde pour fixer/refixer les paramètres (type affichage, etc)
-          
+          // ----- On regarde pour fixer/refixer les paramètres (type affichage, etc)          
           foreach ($v_att['cmd'] as $v_key => $v_value) {
             if ($v_key == 'name') {
               $v_cmd->setName(__($v_value, __FILE__));
@@ -1867,6 +1860,13 @@ class openmqttgateway extends eqLogic {
               //$v_cmd->setDisplay('icon', '<i class="'.$v_value.'"></i>');
               $v_cmd->setDisplay('icon', $v_value);
               $v_cmd->setDisplay('showIconAndNamedashboard', "1");          
+            }
+            else if ($v_key == 'template') {
+              if (is_array($v_value)) {
+                foreach ($v_value as $v_tpl_key => $v_tpl_value) {
+                  $v_cmd->setTemplate($v_tpl_key, $v_tpl_value);
+                }
+              }
             }
           }
           
