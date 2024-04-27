@@ -1049,20 +1049,26 @@ class openmqttgateway extends eqLogic {
         openmqttgatewaylog::log('debug', "postSaveDevice() : new device saved in DB.");
         
         // ----- Create default online status command
+        $this->omgCmdCreateMandatory('present');
+        /*
         $v_cmd = $this->omgCmdCreate('present', ['name'=> __('Présent', __FILE__),
                                      'type'=>'info',
                                      'subtype'=>'binary', 
                                      'isHistorized'=>0, 
                                      'isVisible'=>0]);
         $this->checkAndUpdateCmd('present', 0);
+        */
 
         // ----- Create default online status command
+        $this->omgCmdCreateMandatory('rssi');
+        /*
         $v_cmd = $this->omgCmdCreate('rssi', ['name'=>'rssi',
                                     'type'=>'info',
                                     'subtype'=>'numeric', 
                                     'isHistorized'=>0, 
                                     'isVisible'=>0]);
         $this->checkAndUpdateCmd('rssi', -199);
+        */
 
       }
       
@@ -1460,6 +1466,41 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
+     * Method : omgCmdCreateMandatory()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgCmdCreateMandatory($p_cmd_id) {
+      if (!in_array($p_cmd_id, ['rssi','present'])) {
+        return(null);
+      }
+      
+      if ($p_cmd_id == 'present') {
+        // ----- Create default online status command
+        $v_cmd = $this->omgCmdCreate('present', ['name'=> __('Présent', __FILE__),
+                                     'type'=>'info',
+                                     'subtype'=>'binary', 
+                                     'isHistorized'=>0, 
+                                     'isVisible'=>0]);
+        $this->checkAndUpdateCmd('present', 0);
+      }
+
+      elseif ($p_cmd_id == 'rssi') {
+        // ----- Create default online status command
+        $v_cmd = $this->omgCmdCreate('rssi', ['name'=>'rssi',
+                                    'type'=>'info',
+                                    'subtype'=>'numeric', 
+                                    'isHistorized'=>0, 
+                                    'isVisible'=>0]);
+        $this->checkAndUpdateCmd('rssi', -199);
+      }
+
+	}
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
      * Method : omgCmdCreate()
      * Description :
      *   omgCmdCreate('confort', ['name'=>'Confort', 'type'=>'action', 'subtype'=>'other', 'isHistorized'=>0, 'isVisible'=>1, 'order'=>1]);
@@ -1827,10 +1868,17 @@ class openmqttgateway extends eqLogic {
           // ----- Look if command exists
           $v_cmd = $this->getCmd(null, $v_logicalId);
           if (!is_object($v_cmd)) {
-            openmqttgatewaylog::log('debug', "Create Cmd '".$v_logicalId."' for device '".$this->getName()."'.");
-            $v_cmd = new openmqttgatewayCmd();
-            $v_cmd->setLogicalId($v_logicalId);
-            $v_cmd->setEqLogic_id($this->getId());
+            // ----- Certaines commandes doivent être là (mandatory)
+            if (in_array($v_logicalId, ['rssi','present'])) {
+              openmqttgateway::log('debug', "omgDeviceUpdateCmds() : Erreur la commande '".$v_logicalId."' devrait être là !");
+              $this->omgCmdCreateMandatory($v_logicalId);
+            }
+            else {
+              openmqttgatewaylog::log('debug', "Create Cmd '".$v_logicalId."' for device '".$this->getName()."'.");
+              $v_cmd = new openmqttgatewayCmd();
+              $v_cmd->setLogicalId($v_logicalId);
+              $v_cmd->setEqLogic_id($this->getId());
+            }
           }
           
           // ----- On regarde pour fixer/refixer les paramètres (type affichage, etc)          
@@ -1857,7 +1905,6 @@ class openmqttgateway extends eqLogic {
               $v_cmd->setUnite($v_value);
             }
             else if ($v_key == 'icon') {
-              //$v_cmd->setDisplay('icon', '<i class="'.$v_value.'"></i>');
               $v_cmd->setDisplay('icon', $v_value);
               $v_cmd->setDisplay('showIconAndNamedashboard', "1");          
             }
@@ -1871,7 +1918,6 @@ class openmqttgateway extends eqLogic {
           }
           
           $v_cmd->save();
-          
         }
       }
       
@@ -1970,7 +2016,6 @@ class openmqttgateway extends eqLogic {
       }
       
       // ----- Récupérer les infos actuelle mqtt_info
-      //$v_mqtt_info = $this->omgGetConf('mqtt_info');
       $v_mqtt_info_json = $this->getStatus('mqtt_info');
       $v_mqtt_info = json_decode($v_mqtt_info_json, true);
       if (!is_array($v_mqtt_info)) $v_mqtt_info = array();
@@ -2054,12 +2099,37 @@ class openmqttgateway extends eqLogic {
       if ($v_save_device_flag) {
         $this->save();
       }
-
+      
+      $this->omgDeviceChangeToOnline();
+      
       openmqttgateway::log('debug', "Update attributs done");
     }
     /* -------------------------------------------------------------------------*/
 
 
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceChangeToOnline()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgDeviceChangeToOnline() {
+      $this->checkAndUpdateCmd('present', 1);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceChangeToOffline()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgDeviceChangeToOffline() {
+      $this->checkAndUpdateCmd('present', 0);
+    }
+    /* -------------------------------------------------------------------------*/
 
 
 }

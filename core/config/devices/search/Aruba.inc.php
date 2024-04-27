@@ -15,10 +15,16 @@
       "search_by_attribute_name_value" : [
         {"name":"id", "value":"54:6C:0E", "operator":"inc"}
       ]               
+    },
+
+    {
+      "name" : "Aruba:AssetTag",
+      "search_by_attribute_name_value" : [
+        {"name":"id", "value":"B0:91:22", "operator":"inc"}
+      ]               
     }
 
   MYTEXT;
 
 ?>
-
 
