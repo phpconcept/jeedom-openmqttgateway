@@ -61,6 +61,11 @@ class openmqttgateway extends eqLogic {
         $v_item->omgGatewayCheckOnline();
       }
     
+      $v_list = openmqttgateway::omgDeviceList(['_isEnable'=>true]);
+      foreach ($v_list as $v_item) {
+        $v_item->omgDeviceCheckOnline();
+      }
+    
     }
      
 /*     
@@ -947,6 +952,7 @@ class openmqttgateway extends eqLogic {
         
 
         $this->setStatus('mqtt_info', '');
+        $this->setStatus('last_rcv_mqtt', 0);
         
         // ----- No data to store for postSave() tasks
         $this->_pre_save_cache = null; // New eqpt => Nothing to collect        
@@ -955,6 +961,10 @@ class openmqttgateway extends eqLogic {
       // ----- Look for existing device
       else {
         openmqttgatewaylog::log('debug', "preSaveDevice() : existing device.");
+        
+        if ($this->omgGetConf('device_missing_detection') == 0) {
+          $this->omgDeviceChangeToOnline();
+        }
         
         $v_missing_timeout = $this->omgGetConf('device_missing_timeout');
         if (!is_numeric($v_missing_timeout) || ($v_missing_timeout<1) || ($v_missing_timeout>1440)) {
@@ -1852,6 +1862,8 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceUpdateAttributes($p_attributes, $p_gateway=null) {
       openmqttgateway::log('debug', "Update attributs for '".$this->getName()."' with ".json_encode($p_attributes));
       
+      $this->omgDeviceFlagRcvMqttMsg();
+      
       $v_save_device_flag = false;
        
       $v_best_gateway = $this->omgGetConf('best_gateway');
@@ -2025,12 +2037,26 @@ class openmqttgateway extends eqLogic {
         $this->save();
       }
       
-      $this->omgDeviceChangeToOnline();
+      $this->omgDeviceFlagRcvMqttMsg();
+      //$this->omgDeviceChangeToOnline();
       
       openmqttgateway::log('debug', "Update attributs done");
     }
     /* -------------------------------------------------------------------------*/
 
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceFlagRcvMqttMsg()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgDeviceFlagRcvMqttMsg() {    
+      $this->setStatus('last_rcv_mqtt', time());
+      $this->omgDeviceChangeToOnline();
+    }
+    /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
      * Method : omgDeviceChangeToOnline()
@@ -2055,6 +2081,38 @@ class openmqttgateway extends eqLogic {
       $this->checkAndUpdateCmd('present', 0);
     }
     /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgDeviceCheckOnline()
+     * Description :
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgDeviceCheckOnline() {    
+      openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline()');
+      
+      if (($v_present = $this->omgCmdGetValue('device_missing_detection')) == 0) {
+        return;
+      }
+      
+      if (($v_present = $this->omgCmdGetValue('present')) == 0) {
+        return;
+      }
+      
+      $v_last_ts = $this->getStatus('last_rcv_mqtt');
+      $v_timeout = 60*$this->getStatus('device_missing_timeout');
+      
+      //openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline() last_rcv_mqtt : '.$v_last_ts);
+      //openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline() timeout : '.$v_timeout);
+      //openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline() time() : '.time());
+      
+      if (($v_last_ts + $v_timeout) < time()) {
+        $this->omgDeviceChangeToOffline();
+      }
+    }
+    /* -------------------------------------------------------------------------*/
+
 
 
 }
