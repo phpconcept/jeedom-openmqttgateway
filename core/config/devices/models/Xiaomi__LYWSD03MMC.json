@@ -1,0 +1,9 @@
+{
+  "name" : "Xiaomi:LYWSD03MMC",
+  "brand" : "Xiaomi",
+  "model" : "LYWSD03MMC",
+  "icon" : "images/LYWSD03MMC.png",
+  "attributes_are_mqtt_info" : ["name", "mac"],
+  "other_attributes_are_cmd" : true
+}
+
