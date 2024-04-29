@@ -37,5 +37,12 @@
     </div>
   </div>
 
+  <br>
+  <input type="hidden" id="last_rcv_mqtt" class="cp_attr_device eqLogicAttr "  data-l1key="status" data-l2key="last_rcv_mqtt" onChange="omg_last_rcv_mqtt_change();"></input>
+
+    <div class="row form-group">
+      <label class="col-sm-2 control-label">{{Dernier message reçu : }}</label>
+      <span id="last_rcv_mqtt_display" class="col-sm-7"></span>
+    </div>
 
 

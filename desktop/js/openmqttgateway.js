@@ -398,6 +398,28 @@ function omg_mqtt_info_change() {
 
 }
 
+function omg_last_rcv_mqtt_change() {
+  var v_value = $('#last_rcv_mqtt').value();
+  
+  if (v_value == 0) {
+    var time = '';
+  }
+  else {
+    var a = new Date(v_value * 1000);
+    var months = ['Janvier','Fevrier','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Decembre'];
+    var year = a.getFullYear();
+    var month = months[a.getMonth()];
+    var date = a.getDate();
+    var hour = a.getHours();
+    var min = a.getMinutes();
+    var sec = a.getSeconds();
+    var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+  }
+  
+  $('#last_rcv_mqtt_display').html(time);
+}
+
+
 /*
 $("#omg_mqtt_info").change( function() {
 
