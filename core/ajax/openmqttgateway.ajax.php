@@ -47,13 +47,22 @@ try {
 		ajax::success("{}");
 	}
     
-	if (init('action') == 'omgInclusionGetList') {
-		$v_val = openmqttgateway::omgInclusionGetList();
+	if (init('action') == 'omgInclusionAddDevice') {
+        $v_id = init('id');
+        //openmqttgatewaylog::log('debug', 'ajax id='.$v_id);
+        
+        // TBC : j'ai du encadrer cette fonction de ob_start/ob_end_clean, 
+        // sinon j'avais des erreurs javascript ... vraiment strange
+        ob_start();
+		$v_val = openmqttgateway::omgInclusionAddDevice($v_id);
+        //$out2 = ob_get_contents();
+        ob_end_clean();
+
 		ajax::success(json_encode($v_val, JSON_FORCE_OBJECT));
 	}
     
-	if (init('action') == 'omgInclusionAddDevice') {
-		$v_val = openmqttgateway::omgInclusionAddDevice(init('id'));
+	if (init('action') == 'omgInclusionGetList') {
+		$v_val = openmqttgateway::omgInclusionGetList();
 		ajax::success(json_encode($v_val, JSON_FORCE_OBJECT));
 	}
     

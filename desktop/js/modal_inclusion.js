@@ -182,25 +182,24 @@ function omg_modal_inclusion_scan_add(p_id) {
 
   $('.omg_modal_inclusion_btn[data-id='+p_id+']').hide();
   $('.omg_modal_inclusion_spinner[data-id='+p_id+']').show();
-  
+
   $.ajax({
     type: "POST",
     url: "plugins/openmqttgateway/core/ajax/openmqttgateway.ajax.php",
     data: {
       action: "omgInclusionAddDevice",
-      id: p_id
+      id: p_id,
+      filters: ''
     },
     dataType: 'json',
-    error: function (request, status, error) {
-      //alert('err:'+error);
+      //error: function (request, status, error) {
       handleAjaxError(request, status, error);
     },
     success: function (data) {
       if (data.state != 'ok') {
         $('#div_alert').showAlert({message: 'omg_modal_inclusion_scan_add()'+data.result, level: 'danger'});
         return;
-      }
-      
+      }      
       
       v_val = data.result;
       v_data = JSON.parse(v_val);
@@ -213,6 +212,7 @@ function omg_modal_inclusion_scan_add(p_id) {
 
 }
 
+
 function omg_modal_inclusion_display_list(p_list) {
 
   var v_count = 0;
@@ -222,24 +222,24 @@ function omg_modal_inclusion_display_list(p_list) {
     v_html += '<tr class="omg_modal_inclusion_tr" data-id="'+i+'">';
     
     var v_name = '';
-    if (p_list[i]['name']) {
-      v_name += p_list[i]['name'];
+    if (p_list[i]['properties']['name']) {
+      v_name += p_list[i]['properties']['name'];
     }
-    if (p_list[i]['brand']) {
+    if (p_list[i]['properties']['brand']) {
       if (v_name != '') v_name += ', ';
-      v_name += p_list[i]['brand'];
+      v_name += p_list[i]['properties']['brand'];
     }
-    if (p_list[i]['model']) {
+    if (p_list[i]['properties']['model']) {
       if (v_name != '') v_name += ', ';
-      v_name += p_list[i]['model'];
+      v_name += p_list[i]['properties']['model'];
     }
-    if (p_list[i]['model_id']) {
+    if (p_list[i]['properties']['model_id']) {
       if (v_name != '') v_name += ', ';
-      v_name += p_list[i]['model_id'];
+      v_name += p_list[i]['properties']['model_id'];
     }
-    if (p_list[i]['type']) {
+    if (p_list[i]['properties']['type']) {
       if (v_name != '') v_name += ', ';
-      v_name += p_list[i]['type'];
+      v_name += p_list[i]['properties']['type'];
     }
     if (v_name == '') {
       v_name = '-';

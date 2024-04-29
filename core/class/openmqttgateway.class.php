@@ -344,10 +344,7 @@ class openmqttgateway extends eqLogic {
       config::save('scan_on', 0, 'openmqttgateway');
 
       // ----- Get current scan list
-      $v_scan_list = config::byKey('scan_list', 'openmqttgateway', '');
-      if (($v_scan_list == null) || (!is_array($v_scan_list))) {
-         $v_scan_list = array();
-      }
+      $v_scan_list = openmqttgateway::omgInclusionGetList();
 
       return($v_scan_list);
     }
@@ -364,12 +361,6 @@ class openmqttgateway extends eqLogic {
       openmqttgatewaylog::log('debug', 'omgInclusionFinish()');
 
       config::save('scan_on', 0, 'openmqttgateway');
-
-      // ----- Get current scan list
-      $v_scan_list = config::byKey('scan_list', 'openmqttgateway', '');
-      if (($v_scan_list == null) || (!is_array($v_scan_list))) {
-         $v_scan_list = array();
-      }
 
       // ----- Reset and empty list
       config::save('scan_list', array(), 'openmqttgateway');
@@ -390,9 +381,11 @@ class openmqttgateway extends eqLogic {
 
       // ----- Get current scan list
       $v_scan_list = config::byKey('scan_list', 'openmqttgateway', '');
-      if (($v_scan_list == null) || (!is_array($v_scan_list))) {
-         $v_scan_list = array();
+      if (!is_array($v_scan_list)) {
+        $v_scan_list = array();
       }
+            
+      openmqttgatewaylog::log('debug', 'omgInclusionGetList() : '.json_encode($v_scan_list, true));
 
       return($v_scan_list);
     }
@@ -409,10 +402,7 @@ class openmqttgateway extends eqLogic {
       openmqttgatewaylog::log('debug', 'omgInclusionAddDevice('.$p_id.')');
 
       // ----- Get current scan list
-      $v_scan_list = config::byKey('scan_list', 'openmqttgateway', '');
-      if (($v_scan_list == null) || (!is_array($v_scan_list))) {
-         $v_scan_list = array();
-      }
+      $v_scan_list = openmqttgateway::omgInclusionGetList();
       
       $v_obj_att = null;
       
@@ -424,8 +414,11 @@ class openmqttgateway extends eqLogic {
       }
       
       if ($v_obj_att !== null) {
+        // ----- Récupération de la gateway
+        $v_gateway = openmqttgateway::omgGatewayGetByTopic($v_obj_att['gateway_topic']);
+        
         // ----- Add device
-        openmqttgateway::omgDeviceCreate($p_id, $v_obj_att, null);
+        openmqttgateway::omgDeviceCreate($p_id, $v_obj_att['attributes'], $v_gateway);
         
         // ----- Update scan list be removing added device
         unset($v_scan_list[$p_id]);
@@ -436,12 +429,52 @@ class openmqttgateway extends eqLogic {
         openmqttgatewaylog::log('debug', 'omgInclusionAddDevice('.$p_id.') : no device in list');
       }
 
-      openmqttgatewaylog::log('debug', 'omgInclusionAddDevice() done : '.json_encode($v_scan_list));
+      openmqttgatewaylog::log('debug', 'omgInclusionAddDevice() done : '.json_encode($v_scan_list, true));
       return($v_scan_list);
     }
     /* -------------------------------------------------------------------------*/
 
+    /**---------------------------------------------------------------------------
+     * Method : omgInclusionLearn()
+     * Description :
+     * Parameters :
+     *   
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public static function omgInclusionLearn($p_mqtt_id, $p_properties, $p_gateway) {
+    
+      if (!openmqttgateway::omgInclusionIsOn()) {
+        openmqttgatewaylog::log('debug', "Scaning is off");
+        return;
+      }
+      
+      openmqttgatewaylog::log('debug', "Scaning / learn object ".$p_mqtt_id);
 
+      // ----- Get current scan list
+      $v_scan_list = openmqttgateway::omgInclusionGetList();
+      
+      openmqttgatewaylog::log('debug', 'current list : '.json_encode($v_scan_list));
+      
+      // ----- Update scan list
+      //if (!isset($v_scan_list[$p_mqtt_id])) {
+      if (!array_key_exists($p_mqtt_id, $v_scan_list)) {
+        openmqttgatewaylog::log('debug', "Scaning / adding object ".$p_mqtt_id);
+        
+        $v_item = array();
+        $v_item['id'] = $p_mqtt_id;
+        $v_item['properties'] = $p_properties;
+        $v_item['gateway_topic'] = $p_gateway->omgGetConf('gateway_mqtt_topic');
+        
+        $v_scan_list[$p_mqtt_id] = $v_item;
+        
+        openmqttgatewaylog::log('debug', 'modif list : '.json_encode($v_scan_list, true));
+
+        config::save('scan_list', $v_scan_list, 'openmqttgateway');
+      }
+ 
+    }
+    /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
      * Method : log()
@@ -454,46 +487,6 @@ class openmqttgateway extends eqLogic {
       
       log::add('openmqttgateway', $p_level, $p_message);
 
-    }
-    /* -------------------------------------------------------------------------*/
-
-    /**---------------------------------------------------------------------------
-     * Method : omgDeviceScanLearn()
-     * Description :
-     * Parameters :
-     *   
-     * Returned value : 
-     * ---------------------------------------------------------------------------
-     */
-    public static function omgDeviceScanLearn($p_mqtt_id, $p_properties, $p_gateway) {
-    
-      if (!openmqttgateway::omgInclusionIsOn()) {
-        //openmqttgatewaylog::log('debug', "Scaning is off");
-        return;
-      }
-      
-      openmqttgatewaylog::log('debug', "Scaning / learn object ".$p_mqtt_id);
-
-      // ----- Get current scan list
-      $v_scan_list = config::byKey('scan_list', 'openmqttgateway', '');
-      if (($v_scan_list == null) || (!is_array($v_scan_list))) {
-         $v_scan_list = array();
-      }
-      
-      //openmqttgatewaylog::log('debug', 'current list : '.json_encode($v_scan_list));
-      
-      // ----- Update scan list
-      //if (!isset($v_scan_list[$p_mqtt_id])) {
-      if (!array_key_exists($p_mqtt_id, $v_scan_list)) {
-        openmqttgatewaylog::log('debug', "Scaning / adding object ".$p_mqtt_id);
-        $v_scan_list[$p_mqtt_id] = $p_properties;
-        
-        //openmqttgatewaylog::log('debug', 'modif list : '.json_encode($v_scan_list));
-
-        config::save('scan_list', $v_scan_list, 'openmqttgateway');
-      }
-      
-      //openmqttgateway::omgDeviceCreate($p_mqtt_id, $p_properties, $p_gateway);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -1371,7 +1364,7 @@ class openmqttgateway extends eqLogic {
                 //openmqttgateway::omgDeviceCreate($v_id, $v_properties, $v_gateway);
                 
                 //if (openmqttgateway::omgInclusionIsOn()) {
-                  openmqttgateway::omgDeviceScanLearn($v_id, $v_properties, $v_gateway);
+                  openmqttgateway::omgInclusionLearn($v_id, $v_properties, $v_gateway);
                 //}
               }
               
