@@ -457,7 +457,7 @@ class openmqttgateway extends eqLogic {
       openmqttgatewaylog::log('debug', "Scaning / learn object ".$p_mqtt_id);
       
       // ----- On récupère les infos de modèle
-      [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_properties);
+      [$v_brand_model, $v_brand_score] = openmqttgateway::omgBrandBestMatch($p_properties);
       if ($v_brand_model === null) {
         $v_brand_model_name = '';
       }
@@ -534,7 +534,7 @@ class openmqttgateway extends eqLogic {
       
       // ----- Change la nature du device
       // TBC: peut-on le faire avant ?
-      [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_properties);
+      [$v_brand_model, $v_brand_score] = openmqttgateway::omgBrandBestMatch($p_properties);
       if ($v_brand_model !== null) {
         $v_jeedom_device->setConfiguration('device_brand_model', _agv($v_brand_model, 'name'));
         $v_jeedom_device->setConfiguration('device_brand_score', $v_brand_score);
@@ -564,77 +564,15 @@ class openmqttgateway extends eqLogic {
     }
     /* -------------------------------------------------------------------------*/
 
-    /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandAttIsCmd()
-     * Description :
-     * Parameters :
-     * Returned value : 
-     * ---------------------------------------------------------------------------
-     */
-    static function omgDeviceBrandAttIsCmd($p_brand_info, $p_cmd_id) {
-    
-      if (isset($p_brand_info['attributes'])) {
-        foreach ($p_brand_info['attributes'] as $v_key => $v_attribute) {
-        
-          if ($v_key != $p_cmd_id) continue;
-          
-          if ($v_attribute['type'] == 'cmd') {
-            return(true);
-          }
-          else {
-            return(false);
-          }
-          /*
-          // ----- Si c'est une information battery, ce n'est pas une commande
-          if ($v_attribute['type'] == 'battery') {
-            return(false);
-          }
-          // ----- Si c'est une information mqtt statique, ce n'est pas une commande
-          if ($v_attribute['type'] == 'mqtt_info') {
-            return(false);
-          }
-          */
-        }
-      }
-      
-      // TBC
-      return(true);
-    }
-    /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandAttIsBattery()
+     * Method : omgBrandGetAttType()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandAttIsBattery($p_brand_info, $p_cmd_id) {
-      if (isset($p_brand_info['attributes'])) {
-        foreach ($p_brand_info['attributes'] as $v_key => $v_attribute) {
-        
-          if ($v_key != $p_cmd_id) continue;
-          
-          if ($v_attribute['type'] == 'battery') {
-            return(true);
-          }
-          else {
-            return(false);
-          }
-        }
-      }
-      return(false);
-    }
-    /* -------------------------------------------------------------------------*/
-
-    /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandGetAttType()
-     * Description :
-     * Parameters :
-     * Returned value : 
-     * ---------------------------------------------------------------------------
-     */
-    static function omgDeviceBrandGetAttType($p_brand_info, $p_cmd_id) {
+    static function omgBrandGetAttType($p_brand_info, $p_cmd_id) {
       // ----- Cas specifiques
       if (in_array($p_cmd_id, ['rssi'])) {
         return('cmd');
@@ -672,13 +610,13 @@ class openmqttgateway extends eqLogic {
 
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandSearchList()
+     * Method : omgBrandSearchList()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandSearchList() {
+    static function omgBrandSearchList() {
         
       // ----- Inclure la liste des devices
       include dirname(__FILE__) . '/../../core/config/devices/search/device_search.inc.php';
@@ -700,13 +638,13 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandList()
+     * Method : omgBrandList()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandList($p_name_only=false) {
+    static function omgBrandList($p_name_only=false) {
         
       // ----- Inclure la liste des devices
       $v_cheminDossier = dirname(__FILE__) . '/../../core/config/devices/models';
@@ -729,7 +667,7 @@ class openmqttgateway extends eqLogic {
                         $v_fichiers[] = $v_name;
                       }
                       else {
-                        if (($v_info = openmqttgateway::omgDeviceBrandInfo($v_name)) !== null) {
+                        if (($v_info = openmqttgateway::omgBrandInfo($v_name)) !== null) {
                           $v_fichiers[] = $v_info;
                         }                        
                       }
@@ -748,13 +686,13 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandInfo()
+     * Method : omgBrandInfo()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandInfo($p_brand_model_name) {
+    static function omgBrandInfo($p_brand_model_name) {
 
       $v_brand_model_name = str_replace(':', '__', $p_brand_model_name);
       $v_filename = dirname(__FILE__) . '/../config/devices/models/'.$v_brand_model_name.'.json';
@@ -778,15 +716,15 @@ class openmqttgateway extends eqLogic {
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
-     * Method : omgDeviceBrandBestMatch()
+     * Method : omgBrandBestMatch()
      * Description :
      * Parameters :
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-    static function omgDeviceBrandBestMatch($p_attributes) {
+    static function omgBrandBestMatch($p_attributes) {
     
-      $v_list = openmqttgateway::omgDeviceBrandSearchList();
+      $v_list = openmqttgateway::omgBrandSearchList();
       
       $v_best_match_name = '';
       $v_best_match_count = 0;
@@ -863,7 +801,7 @@ class openmqttgateway extends eqLogic {
         
       }
       
-      $v_brand_model = openmqttgateway::omgDeviceBrandInfo($v_best_match_name);
+      $v_brand_model = openmqttgateway::omgBrandInfo($v_best_match_name);
       
       return([$v_brand_model, $v_best_match_count]);
     }
@@ -1001,9 +939,9 @@ class openmqttgateway extends eqLogic {
         
         if ($eqLogic->omgGetConf('device_brand_model') != $this->omgGetConf('device_brand_model')) {
         
-          $v_brand_model = openmqttgateway::omgDeviceBrandInfo($this->omgGetConf('device_brand_model'));
+          $v_brand_model = openmqttgateway::omgBrandInfo($this->omgGetConf('device_brand_model'));
           if ($v_brand_model == null) {
-            $v_brand_model = openmqttgateway::omgDeviceBrandInfo('Generic:Generic');
+            $v_brand_model = openmqttgateway::omgBrandInfo('Generic:Generic');
           }
           
           // ----- On met à jour les commandes nécessaires
@@ -1762,7 +1700,7 @@ class openmqttgateway extends eqLogic {
      */
     public function omgDeviceGetBrandInfo() {
       $v_brand_name = $this->omgGetConf('device_brand_model');
-      $v_brand_model = openmqttgateway::omgDeviceBrandInfo($v_brand_name);
+      $v_brand_model = openmqttgateway::omgBrandInfo($v_brand_name);
       if ($v_brand_model !== null) {
         return($v_brand_model);
       }
@@ -1923,7 +1861,7 @@ class openmqttgateway extends eqLogic {
       
       if ($v_brand_auto_discover_count > 0) {
       
-        [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_attributes);
+        [$v_brand_model, $v_brand_score] = openmqttgateway::omgBrandBestMatch($p_attributes);
         //openmqttgateway::log('debug', "Auto-discover brand_model : '".$v_brand_model['name']."','".$v_brand_model['icon']."'"); 
         
         if (($v_brand_model != null) 
@@ -1956,7 +1894,7 @@ class openmqttgateway extends eqLogic {
       }
       
       if ($v_brand_model == null) {
-        if (($v_brand_model = openmqttgateway::omgDeviceBrandInfo($v_current_brand_model_name)) === null) {
+        if (($v_brand_model = openmqttgateway::omgBrandInfo($v_current_brand_model_name)) === null) {
           openmqttgateway::log('debug', "Erreur : Il manque les info de fabriquant");
           return;
         }
@@ -1973,13 +1911,10 @@ class openmqttgateway extends eqLogic {
       // l'attribut
       foreach ($p_attributes as $v_key => $v_value) {
         // ----- On récupère si l'att est une cmd, de l'info batterie, autre ...
-        $v_att_type = openmqttgateway::omgDeviceBrandGetAttType($v_brand_model, $v_key);
+        $v_att_type = openmqttgateway::omgBrandGetAttType($v_brand_model, $v_key);
         
         openmqttgateway::log('debug', "  Attribute '".$v_key."' (".$v_att_type.") = ".$v_value."");
                 
-        //[$v_cmd_status, $v_cmd_info] = openmqttgateway::omgDeviceBrandAttIsCmd($v_brand_model, $v_key);
-        //$v_cmd_status = openmqttgateway::omgDeviceBrandAttIsCmd($v_brand_model, $v_key);
-        
         if ($v_att_type == 'cmd') {
 
           // ----- Look if command exists

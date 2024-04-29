@@ -20,7 +20,7 @@
       <select id="omg_device_select_nature" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="device_brand_model">
           <?php
             $v_brand = '';
-            foreach (openmqttgateway::omgDeviceBrandList() as $v_item) {
+            foreach (openmqttgateway::omgBrandList() as $v_item) {
               if ($v_item['brand'] != $v_brand) {
                 echo '<option style="background-color: #039be5  !important; color: white !important; font-style: normal !important;" disabled>'.$v_item['brand'].'</option>';
                 $v_brand = $v_item['brand'];
