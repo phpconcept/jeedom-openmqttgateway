@@ -2092,7 +2092,7 @@ class openmqttgateway extends eqLogic {
     public function omgDeviceCheckOnline() {    
       openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline()');
       
-      if (($v_present = $this->omgCmdGetValue('device_missing_detection')) == 0) {
+      if (($v_present = $this->omgGetConf('device_missing_detection')) == 0) {
         return;
       }
       
@@ -2101,7 +2101,7 @@ class openmqttgateway extends eqLogic {
       }
       
       $v_last_ts = $this->getStatus('last_rcv_mqtt');
-      $v_timeout = 60*$this->getStatus('device_missing_timeout');
+      $v_timeout = 60*$this->omgGetConf('device_missing_timeout');
       
       //openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline() last_rcv_mqtt : '.$v_last_ts);
       //openmqttgatewaylog::log('debug', 'omgDeviceCheckOnline() timeout : '.$v_timeout);
