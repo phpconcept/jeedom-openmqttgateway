@@ -37,7 +37,12 @@
   <div class="row form-group">
     <label class="col-sm-4 control-label">{{Auto-découverte du modèle :}}</label>
     <div class="col-sm-8">
-      <input type="checkbox" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="brand_auto_discover" checked/>      
+      <select id="omg_device_select_auto_discover" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="brand_auto_discover">
+        <option value="0">Non</option>
+        <option value="5">Pendant les 5 premiers messages</option>
+        <option value="10">Pendant les 10 premiers messages</option>
+        <option value="99">Toujours</option>
+      </select>
     </div>
   </div>
 

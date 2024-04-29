@@ -944,7 +944,8 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('best_gateway_rssi', -199);
         $this->setConfiguration('best_gateway_ts', time()); // ts : timestamp
         
-        $this->setConfiguration('brand_auto_discover', 1);
+        $this->setConfiguration('brand_auto_discover', 5);
+        $this->setConfiguration('brand_auto_discover_count', 5);
         $this->setConfiguration('device_brand_model', 'Generic:Generic');
         $this->setConfiguration('device_brand_score', 0);
 
@@ -986,7 +987,11 @@ class openmqttgateway extends eqLogic {
           // ----- On met à jour les commandes nécessaires
           $this->omgDeviceUpdateCmds($v_brand_model);     
         }
-        
+
+        if ($eqLogic->omgGetConf('brand_auto_discover') != $this->omgGetConf('brand_auto_discover')) {
+          $this->setConfiguration('brand_auto_discover_count', $this->omgGetConf('brand_auto_discover'));
+        }
+                
         openmqttgatewaylog::log('debug', "_pre_save_cache=".json_encode($this->_pre_save_cache));
         
       }
@@ -1081,16 +1086,6 @@ class openmqttgateway extends eqLogic {
         // ----- Regarde si le device a changé de nature
         if ($this->_pre_save_cache['device_brand_model'] != $this->omgGetConf('device_brand_model')) {
         
-        /*
-          $v_brand_model = openmqttgateway::omgDeviceBrandInfo($this->omgGetConf('device_brand_model'));
-          if ($v_brand_model == null) {
-            $v_brand_model = openmqttgateway::omgDeviceBrandInfo('Generic:Generic');
-          }
-          
-          // ----- On met à jour les commandes nécessaires
-          $this->omgDeviceUpdateCmds($v_brand_model);    
-          
-          */
                 
         }
           
@@ -1979,10 +1974,10 @@ class openmqttgateway extends eqLogic {
       
       $v_current_brand_model_name = $this->omgGetConf('device_brand_model');
       $v_current_brand_score = $this->omgGetConf('device_brand_score');
-      $v_brand_auto_discover = $this->omgGetConf('brand_auto_discover');
+      $v_brand_auto_discover_count = $this->omgGetConf('brand_auto_discover_count');
       $v_brand_model = null;
       
-      if ($v_brand_auto_discover) {
+      if ($v_brand_auto_discover_count > 0) {
       
         [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_attributes);
         //openmqttgateway::log('debug', "Auto-discover brand_model : '".$v_brand_model['name']."','".$v_brand_model['icon']."'"); 
@@ -2004,6 +1999,14 @@ class openmqttgateway extends eqLogic {
         }
         else {
           openmqttgateway::log('debug', "Swap de brand_model ? non pas de proposition."); 
+        }
+        
+        // ----- On décrémente le nombre de tentative de découverte, sauf si "toujours" choisit.
+        if ($v_brand_auto_discover_count != 99) {
+          $v_brand_auto_discover_count--;
+          $this->setConfiguration('brand_auto_discover_count', $v_brand_auto_discover_count);
+          if ($v_brand_auto_discover_count == 0) $this->setConfiguration('brand_auto_discover', 0);
+          $v_save_device_flag = true;
         }
         
       }
