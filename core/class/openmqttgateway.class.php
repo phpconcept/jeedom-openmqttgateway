@@ -423,7 +423,7 @@ class openmqttgateway extends eqLogic {
         $v_gateway = openmqttgateway::omgGatewayGetByTopic($v_obj_att['gateway_topic']);
         
         // ----- Add device
-        openmqttgateway::omgDeviceCreate($p_id, $v_obj_att['attributes'], $v_gateway);
+        openmqttgateway::omgDeviceCreate($p_id, $v_obj_att['properties'], $v_gateway);
         
         // ----- Update scan list be removing added device
         unset($v_scan_list[$p_id]);
