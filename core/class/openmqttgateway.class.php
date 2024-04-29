@@ -2067,6 +2067,7 @@ class openmqttgateway extends eqLogic {
      */
     public function omgDeviceChangeToOnline() {
       $this->checkAndUpdateCmd('present', 1);
+      $this->setStatus('danger', 0);
     }
     /* -------------------------------------------------------------------------*/
 
@@ -2079,6 +2080,7 @@ class openmqttgateway extends eqLogic {
      */
     public function omgDeviceChangeToOffline() {
       $this->checkAndUpdateCmd('present', 0);
+      $this->setStatus('danger', 1);
     }
     /* -------------------------------------------------------------------------*/
 
