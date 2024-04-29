@@ -941,6 +941,10 @@ class openmqttgateway extends eqLogic {
         $this->setConfiguration('brand_auto_discover_count', 5);
         $this->setConfiguration('device_brand_model', 'Generic:Generic');
         $this->setConfiguration('device_brand_score', 0);
+        
+        $this->setConfiguration('device_missing_detection', 0);
+        $this->setConfiguration('device_missing_timeout', 10);
+        
 
         $this->setStatus('mqtt_info', '');
         
@@ -951,6 +955,11 @@ class openmqttgateway extends eqLogic {
       // ----- Look for existing device
       else {
         openmqttgatewaylog::log('debug', "preSaveDevice() : existing device.");
+        
+        $v_missing_timeout = $this->omgGetConf('device_missing_timeout');
+        if (!is_numeric($v_missing_timeout) || ($v_missing_timeout<1) || ($v_missing_timeout>1440)) {
+          $this->setConfiguration('device_missing_timeout', 10);
+        }
 
         // ----- Load device (eqLogic) from DB
         // These values will be erased with the save in DB, so keep what is needed to be kept

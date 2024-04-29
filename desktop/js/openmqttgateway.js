@@ -204,6 +204,20 @@ $("#omg_device_delete_all").off('click').on('click', function () {
   });
 });
 
+
+$("#device_missing_detection").off('click').on('click', function () {
+  if (this.checked) {
+    $("#device_missing_detection_div").show();
+  }
+  else {
+    $("#device_missing_detection_div").hide();
+  }
+});
+
+
+
+
+
 /*
  * Display modal d'inclusion
  */
@@ -336,10 +350,20 @@ function cp_gateway_display_init() {
  */
 function cp_device_display_init() {
 
+  // ----- Some cleaning
+  $("#device_missing_detection_div").hide();
+  $('#device_missing_detection').each(function() {  
+    if (this.checked) {
+      $("#device_missing_detection_div").show();
+    }
+  });
+  
   // ----- Affichage du panel pour les devices
   $('.cp_panel_device').show();
   $('.cp_panel_gateway').hide();  
-    
+  
+  
+      
 }
 
 
@@ -409,6 +433,8 @@ function saveEqLogic(_eqLogic) {
                            "cmd_auto_discover":1,
                            "device_brand_model":1,
                            "brand_auto_discover":1,
+                           "device_missing_detection":1,
+                           "device_missing_timeout":1,
                            "____________":1
                           }
                         ,"gateway" : 

@@ -53,5 +53,21 @@
     </div>
   </div>
 
+  <div class="row form-group">
+    <label class="col-sm-4 control-label">{{Détection d'absence :}}</label>
+    <div class="col-sm-8">
+      <input type="checkbox" id="device_missing_detection" class="cp_attr_device eqLogicAttr form-control" data-l1key="configuration" data-l2key="device_missing_detection"/>      
+    </div>
+  </div>
+
+  <div id="device_missing_detection_div" style="display:none;">
+  <div class="row form-group">
+    <label class="col-sm-4 control-label">{{Absence max. (minutes) :}}</label>
+    <div class="col-sm-8">
+      <input type="text" class="cp_attr_device eqLogicAttr form-control" style="width: 100%;" data-l1key="configuration" data-l2key="device_missing_timeout" />      
+    </div>
+  </div>
+  </div>
+
 
 
