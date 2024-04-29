@@ -192,7 +192,7 @@ function omg_modal_inclusion_scan_add(p_id) {
       filters: ''
     },
     dataType: 'json',
-      //error: function (request, status, error) {
+    error: function (request, status, error) {
       handleAjaxError(request, status, error);
     },
     success: function (data) {
@@ -222,7 +222,12 @@ function omg_modal_inclusion_display_list(p_list) {
     v_html += '<tr class="omg_modal_inclusion_tr" data-id="'+i+'">';
     
     var v_name = '';
+    if (p_list[i]['brand_name']) {
+      if (v_name != '') v_name += ', ';
+      v_name += p_list[i]['brand_name'];
+    }
     if (p_list[i]['properties']['name']) {
+      if (v_name != '') v_name += ', ';
       v_name += p_list[i]['properties']['name'];
     }
     if (p_list[i]['properties']['brand']) {

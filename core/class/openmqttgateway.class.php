@@ -455,6 +455,15 @@ class openmqttgateway extends eqLogic {
       }
       
       openmqttgatewaylog::log('debug', "Scaning / learn object ".$p_mqtt_id);
+      
+      // ----- On récupère les infos de modèle
+      [$v_brand_model, $v_brand_score] = openmqttgateway::omgDeviceBrandBestMatch($p_properties);
+      if ($v_brand_model === null) {
+        $v_brand_model_name = '';
+      }
+      else {
+        $v_brand_model_name = $v_brand_model['name'];
+      }
 
       // ----- Get current scan list
       $v_scan_list = openmqttgateway::omgInclusionGetList();
@@ -468,6 +477,7 @@ class openmqttgateway extends eqLogic {
         
         $v_item = array();
         $v_item['id'] = $p_mqtt_id;
+        $v_item['brand_name'] = $v_brand_model_name;
         $v_item['properties'] = $p_properties;
         $v_item['gateway_topic'] = $p_gateway->omgGetConf('gateway_mqtt_topic');
         
