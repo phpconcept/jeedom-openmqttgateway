@@ -17,7 +17,7 @@
 */
 
   // ----- Current version
-  define('OMG_VERSION', '0.1');
+  define('OMG_VERSION', '0.2.0-dev');
 
 
 ?>

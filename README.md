@@ -14,6 +14,8 @@ Ces paramètres du cycle d'hystérésis sont configurables dans les paramètres du p
 
 ### Change Logs
 
+Release v0.2.0 (dev) :
+
 Release v0.1 (beta) :
  - Première version
  - Ajout d'une commande (info) 'online_status' qui permet d'indiquer si la gateway envoi toujours des messages MQTT. Le temps d'absence de message qui déclenche le mode offline est par défaut de 2 minutes, mais peut se configurer dans les paramètres de la gateway. 
