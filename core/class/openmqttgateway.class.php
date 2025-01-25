@@ -1303,11 +1303,17 @@ class openmqttgateway extends eqLogic {
       foreach ($p_datas[$v_topic] as $v_key => $v_values) {
         openmqttgatewaylog::log('debug', 'Received data for gateway "'.$v_key.'"');
         
+        if ($v_key == "presence") {
+          openmqttgatewaylog::log('debug', 'Ignore "presence" topic.');
+          continue;
+        }
+        
         $v_gateway = openmqttgateway::omgGatewayGetByTopic($v_key);
         if ($v_gateway === null) {
           openmqttgatewaylog::log('debug', 'No gateway with this topic "'.$v_key.'"');
           
-          if (openmqttgateway::omgGatewayAutoDiscover()) {
+          if (openmqttgateway::omgGatewayAutoDiscover()
+              && (isset($v_values['BTtoMQTT']) || isset($v_values['SYStoMQTT']) || isset($v_values['WebUItoMQTT']))) {
             $v_gateway = openmqttgateway::omgGatewayCreate($v_key, $v_values);
           }
           
