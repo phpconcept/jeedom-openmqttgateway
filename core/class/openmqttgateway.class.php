@@ -1128,35 +1128,23 @@ class openmqttgateway extends eqLogic {
     /*
      * Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
      */
-     /*
-    public function toHtml($_version = 'dashboard') {
-    
+     public function toHtml($_version = 'dashboard') {
+
       // ----- Look for use of standard widget or not
       if (config::byKey('standard_widget', 'openmqttgateway') == 1) {
         return parent::toHtml($_version);
       }
-      
-      if ($this->omgIsType('device')) {
-      //$_version = 'mobile'; // dev trick
-        if ($_version == 'dashboard') {
-          return $this->toHtml_device($_version);
+
+      if ($this->omgIsType('gateway')) {
+        if ($_version == 'dashboard' || $_version == 'mobile') {
+          return $this->toHtml_gateway($_version);
         }
-        else if ($_version == 'mobile') {
-//          return $this->toHtml_mobile_device($_version);
-          return $this->toHtml_device($_version);
-        }
-        else {
-          return parent::toHtml($_version);
-        }
-      }
-      else {
-        return $this->toHtml_gateway($_version);
+        return parent::toHtml($_version);
       }
 
-
-      
+      // ----- Les objets (devices) restent sur le widget standard Jeedom pour l'instant
+      return parent::toHtml($_version);
     }
-*/
 
     /**---------------------------------------------------------------------------
      * Method : toHtml_gateway()
@@ -1166,8 +1154,7 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-/*     
-    public function toHtml_gateway($_version = 'dashboard') {
+public function toHtml_gateway($_version = 'dashboard') {
       //openmqttgateway::log('debug',  "Call toHtml_gateway()");
 
       $replace = $this->preToHtml($_version);
@@ -1176,16 +1163,24 @@ class openmqttgateway extends eqLogic {
         return $replace;
       }      
       $version = jeedom::versionAlias($_version);
-  
 
-      //$replace['#name_display#'] = 'La Gateway Pilote';
-     
+      // ----- Statut en ligne / hors ligne
+      $v_online = ($this->omgCmdGetValue('online_status') == 1);
+      $replace['#online_label#'] = $v_online ? 'label-success' : 'label-danger';
+      $replace['#online_text#'] = $v_online ? __('En ligne', __FILE__) : __('Hors ligne', __FILE__);
 
+      // ----- Dernier message MQTT reçu
+      $v_last_ts = $this->getStatus('last_rcv_mqtt');
+      $replace['#last_seen#'] = ($v_last_ts != '') ? openmqttgateway::omgFormatElapsed($v_last_ts) : __('Jamais', __FILE__);
+
+      // ----- Nombre d'objets BLE rattachés
+      $v_count = $this->omgGatewayGetDeviceCount();
+      $replace['#nb_devices#'] = $v_count['total'];
+      $replace['#nb_devices_online#'] = $v_count['online'];
 
       // postToHtml() : fait en fait le remplacement dans template + le cache du widget
       return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'openmqttgateway-gateway.template', __CLASS__)));  
-    }
-*/    
+    }    
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
@@ -1694,6 +1689,50 @@ class openmqttgateway extends eqLogic {
       if (($v_last_ts + $v_timeout) < time()) {
         $this->omgGatewayChangeToOffline();
       }
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayGetDeviceCount()
+     * Description :
+     *   Compte les objets BLE actuellement rattachés à cette gateway (via
+     *   configuration.best_gateway) et parmi eux ceux considérés "présents".
+     * Parameters :
+     * Returned value : array('total'=>int, 'online'=>int)
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayGetDeviceCount() {
+      $v_topic = $this->omgGetConf('gateway_mqtt_topic');
+      $v_total = 0;
+      $v_online = 0;
+      foreach (openmqttgateway::omgDeviceList() as $v_device) {
+        if ($v_device->omgGetConf('best_gateway') != $v_topic) {
+          continue;
+        }
+        $v_total++;
+        if ($v_device->omgCmdGetValue('present') == 1) {
+          $v_online++;
+        }
+      }
+      return array('total' => $v_total, 'online' => $v_online);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgFormatElapsed()
+     * Description :
+     *   Formatte un timestamp en durée écoulée courte ("5 min", "2 h", "3 j").
+     * Parameters :
+     * Returned value : string
+     * ---------------------------------------------------------------------------
+     */
+    public static function omgFormatElapsed($p_ts) {
+      $v_delta = time() - intval($p_ts);
+      if ($v_delta < 0) $v_delta = 0;
+      if ($v_delta < 60) return $v_delta.__('s', __FILE__);
+      if ($v_delta < 3600) return intval($v_delta / 60).__(' min', __FILE__);
+      if ($v_delta < 86400) return intval($v_delta / 3600).__(' h', __FILE__);
+      return intval($v_delta / 86400).__(' j', __FILE__);
     }
     /* -------------------------------------------------------------------------*/
 

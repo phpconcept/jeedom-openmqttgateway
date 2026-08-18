@@ -55,6 +55,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
         <br>
         <span>{{Configuration}}</span>
       </div>
+
+      <div class="cursor logoSecondary" onclick="document.location.href='index.php?v=d&p=gatewaydashboard&m=openmqttgateway';">
+        <i class="fas fa-tachometer-alt"></i>
+        <br>
+        <span>{{Tableau de bord}}</span>
+      </div>
   </div>
 <?php
 // Here I moved this part of the display to a modal file : modal.device_list.php
