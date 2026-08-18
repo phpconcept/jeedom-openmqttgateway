@@ -55,6 +55,12 @@ $eqLogics = eqLogic::byType($plugin->getId());
         <br>
         <span>{{Configuration}}</span>
       </div>
+
+      <div class="cursor logoSecondary" onclick="document.location.href='index.php?v=d&p=gatewaydashboard&m=openmqttgateway';">
+        <i class="fas fa-tachometer-alt"></i>
+        <br>
+        <span>{{Tableau de bord}}</span>
+      </div>
   </div>
 <?php
 // Here I moved this part of the display to a modal file : modal.device_list.php
@@ -79,7 +85,7 @@ $eqLogics = eqLogic::byType($plugin->getId());
 			</span>
 		</div>
   <ul class="nav nav-tabs" role="tablist">
-    <li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay"><i class="fa fa-arrow-circle-left"></i></a></li>
+    <li role="presentation"><a href="#" class="eqLogicAction" aria-controls="home" role="tab" data-toggle="tab" data-action="returnToThumbnailDisplay" onClick="refreshDeviceList();"><i class="fa fa-arrow-circle-left"></i></a></li>
     <li role="presentation" class="active"><a href="#eqlogictab" aria-controls="home" role="tab" data-toggle="tab"><i class="fas fa-tachometer-alt"></i> {{Equipement}}</a></li>
     <li role="presentation"><a href="#commandtab" aria-controls="profile" role="tab" data-toggle="tab"><i class="fa fa-list-alt"></i> {{Commandes}}</a></li>
   </ul>

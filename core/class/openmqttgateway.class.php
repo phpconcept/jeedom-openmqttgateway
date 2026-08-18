@@ -68,17 +68,12 @@ class openmqttgateway extends eqLogic {
     
     }
      
-/*     
-    public static function cron5() {
-        
-      // ----- Recalculate mode for each device
-      $v_list = openmqttgateway::omgDeviceList(['_isEnable'=>true]);
-      foreach ($v_list as $v_device) {
-        // TBC
+public static function cron5() {
+      $v_list = openmqttgateway::omgGatewayList(['_isEnable'=>true]);
+      foreach ($v_list as $v_item) {
+        $v_item->omgGatewayCheckHttp();
       }
-
-	}
-*/
+    }
 
     /*
      * Fonction exécutée automatiquement toutes les 5,10,15 minutes par Jeedom
@@ -1128,35 +1123,23 @@ class openmqttgateway extends eqLogic {
     /*
      * Non obligatoire mais permet de modifier l'affichage du widget si vous en avez besoin
      */
-     /*
-    public function toHtml($_version = 'dashboard') {
-    
+     public function toHtml($_version = 'dashboard') {
+
       // ----- Look for use of standard widget or not
       if (config::byKey('standard_widget', 'openmqttgateway') == 1) {
         return parent::toHtml($_version);
       }
-      
-      if ($this->omgIsType('device')) {
-      //$_version = 'mobile'; // dev trick
-        if ($_version == 'dashboard') {
-          return $this->toHtml_device($_version);
+
+      if ($this->omgIsType('gateway')) {
+        if ($_version == 'dashboard' || $_version == 'mobile') {
+          return $this->toHtml_gateway($_version);
         }
-        else if ($_version == 'mobile') {
-//          return $this->toHtml_mobile_device($_version);
-          return $this->toHtml_device($_version);
-        }
-        else {
-          return parent::toHtml($_version);
-        }
-      }
-      else {
-        return $this->toHtml_gateway($_version);
+        return parent::toHtml($_version);
       }
 
-
-      
+      // ----- Les objets (devices) restent sur le widget standard Jeedom pour l'instant
+      return parent::toHtml($_version);
     }
-*/
 
     /**---------------------------------------------------------------------------
      * Method : toHtml_gateway()
@@ -1166,8 +1149,7 @@ class openmqttgateway extends eqLogic {
      * Returned value : 
      * ---------------------------------------------------------------------------
      */
-/*     
-    public function toHtml_gateway($_version = 'dashboard') {
+public function toHtml_gateway($_version = 'dashboard') {
       //openmqttgateway::log('debug',  "Call toHtml_gateway()");
 
       $replace = $this->preToHtml($_version);
@@ -1176,16 +1158,46 @@ class openmqttgateway extends eqLogic {
         return $replace;
       }      
       $version = jeedom::versionAlias($_version);
-  
 
-      //$replace['#name_display#'] = 'La Gateway Pilote';
-     
+      // ----- Statut en ligne / hors ligne
+      $v_online = ($this->omgCmdGetValue('online_status') == 1);
+      $replace['#online_label#'] = $v_online ? 'label-success' : 'label-danger';
+      $replace['#online_text#'] = $v_online ? __('En ligne', __FILE__) : __('Hors ligne', __FILE__);
 
+      // ----- Adresse IP de la gateway
+      $v_ip = $this->omgCmdGetValue('ip');
+      $replace['#ip_address#'] = ($v_ip != '') ? $v_ip : '—';
+
+      // ----- Dernier message MQTT reçu
+      $v_last_ts = $this->getStatus('last_rcv_mqtt');
+      $replace['#last_seen#'] = ($v_last_ts != '') ? openmqttgateway::omgFormatElapsed($v_last_ts) : __('Jamais', __FILE__);
+
+      // ----- Icone de test HTTP (uniquement si un resultat existe)
+      $replace['#http_icon_class#'] = '';
+      $replace['#http_icon_color#'] = '';
+      $replace['#http_icon_title#'] = '';
+      $v_http_cmd = $this->getCmd(null, 'http_status');
+      if (is_object($v_http_cmd)) {
+        if ($this->omgCmdGetValue('http_status') == 1) {
+          $replace['#http_icon_class#'] = 'fas fa-check-circle';
+          $replace['#http_icon_color#'] = '#2ecc71';
+          $replace['#http_icon_title#'] = __('OpenMQTT joignable en IP', __FILE__);
+        }
+        else {
+          $replace['#http_icon_class#'] = 'fas fa-exclamation-triangle';
+          $replace['#http_icon_color#'] = '#e67e22';
+          $replace['#http_icon_title#'] = __('OpenMQTT injoignable en IP', __FILE__);
+        }
+      }
+
+      // ----- Nombre d'objets BLE rattachés
+      $v_count = $this->omgGatewayGetDeviceCount();
+      $replace['#nb_devices#'] = $v_count['total'];
+      $replace['#nb_devices_online#'] = $v_count['online'];
 
       // postToHtml() : fait en fait le remplacement dans template + le cache du widget
       return $this->postToHtml($_version, template_replace($replace, getTemplate('core', $version, 'openmqttgateway-gateway.template', __CLASS__)));  
-    }
-*/    
+    }    
     /* -------------------------------------------------------------------------*/
 
     /**---------------------------------------------------------------------------
@@ -1303,11 +1315,17 @@ class openmqttgateway extends eqLogic {
       foreach ($p_datas[$v_topic] as $v_key => $v_values) {
         openmqttgatewaylog::log('debug', 'Received data for gateway "'.$v_key.'"');
         
+        if ($v_key == "presence") {
+          openmqttgatewaylog::log('debug', 'Ignore "presence" topic.');
+          continue;
+        }
+        
         $v_gateway = openmqttgateway::omgGatewayGetByTopic($v_key);
         if ($v_gateway === null) {
           openmqttgatewaylog::log('debug', 'No gateway with this topic "'.$v_key.'"');
           
-          if (openmqttgateway::omgGatewayAutoDiscover()) {
+          if (openmqttgateway::omgGatewayAutoDiscover()
+              && (isset($v_values['BTtoMQTT']) || isset($v_values['SYStoMQTT']) || isset($v_values['WebUItoMQTT']))) {
             $v_gateway = openmqttgateway::omgGatewayCreate($v_key, $v_values);
           }
           
@@ -1688,6 +1706,144 @@ class openmqttgateway extends eqLogic {
       if (($v_last_ts + $v_timeout) < time()) {
         $this->omgGatewayChangeToOffline();
       }
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayGetDeviceCount()
+     * Description :
+     *   Compte les objets BLE actuellement rattachés à cette gateway (via
+     *   configuration.best_gateway) et parmi eux ceux considérés "présents".
+     * Parameters :
+     * Returned value : array('total'=>int, 'online'=>int)
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayGetDeviceCount() {
+      $v_topic = $this->omgGetConf('gateway_mqtt_topic');
+      $v_total = 0;
+      $v_online = 0;
+      foreach (openmqttgateway::omgDeviceList() as $v_device) {
+        if ($v_device->omgGetConf('best_gateway') != $v_topic) {
+          continue;
+        }
+        $v_total++;
+        if ($v_device->omgCmdGetValue('present') == 1) {
+          $v_online++;
+        }
+      }
+      return array('total' => $v_total, 'online' => $v_online);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgFormatElapsed()
+     * Description :
+     *   Formatte un timestamp en durée écoulée courte ("5 min", "2 h", "3 j").
+     * Parameters :
+     * Returned value : string
+     * ---------------------------------------------------------------------------
+     */
+    public static function omgFormatElapsed($p_ts) {
+      $v_delta = time() - intval($p_ts);
+      if ($v_delta < 0) $v_delta = 0;
+      if ($v_delta < 60) return $v_delta.__('s', __FILE__);
+      if ($v_delta < 3600) return intval($v_delta / 60).__(' min', __FILE__);
+      if ($v_delta < 86400) return intval($v_delta / 3600).__(' h', __FILE__);
+      return intval($v_delta / 86400).__(' j', __FILE__);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgGatewayCheckHttp()
+     * Description :
+     *   Test de secours (cron5, toutes les 5 min) : si la gateway est hors ligne
+     *   côté MQTT, on vérifie si son IP répond en HTTP avec une authentification
+     *   dont le realm correspond bien au topic de cette gateway (évite de conclure
+     *   à tort si l'IP a été reprise par un autre appareil). Ne fait rien si la
+     *   gateway est déjà considérée en ligne via MQTT, ou si son IP est inconnue
+     *   (jamais reçu de message SYStoMQTT).
+     * Parameters :
+     * Returned value : 
+     * ---------------------------------------------------------------------------
+     */
+    public function omgGatewayCheckHttp() {
+      if ($this->omgCmdGetValue('online_status') == 1) {
+        // Déjà vue en ligne via MQTT, pas besoin du test HTTP de secours
+        return;
+      }
+
+      $v_ip = $this->omgCmdGetValue('ip');
+      if ($v_ip == '') {
+        // IP jamais connue (aucun message SYStoMQTT reçu pour l'instant)
+        return;
+      }
+
+      $v_expected_realm = $this->omgGetConf('gateway_mqtt_topic');
+      $v_reachable = openmqttgateway::omgHttpCheckAuthRealm($v_ip, $v_expected_realm);
+      $this->omgCmdCreate('http_status', array(
+        'name' => 'Joignable HTTP',
+        'type' => 'info',
+        'subtype' => 'binary',
+        'isHistorized' => 0,
+        'isVisible' => 0,
+      ));
+      $this->checkAndUpdateCmd('http_status', $v_reachable ? 1 : 0);
+    }
+    /* -------------------------------------------------------------------------*/
+
+    /**---------------------------------------------------------------------------
+     * Method : omgHttpCheckAuthRealm()
+     * Description :
+     *   Effectue une requête HTTP courte sur l'IP donnée et vérifie que la
+     *   réponse est bien un 401 avec une authentification (Digest ou Basic) dont
+     *   le realm correspond exactement à la valeur attendue. Ne lève jamais
+     *   d'exception : toute erreur réseau / timeout / réponse inattendue renvoie
+     *   simplement false.
+     * Parameters :
+     *   $p_host : adresse IP ou nom d'hôte à tester
+     *   $p_expected_realm : realm attendu dans l'en-tête WWW-Authenticate
+     *   $p_timeout : timeout en secondes (défaut 2)
+     * Returned value : bool
+     * ---------------------------------------------------------------------------
+     */
+    public static function omgHttpCheckAuthRealm($p_host, $p_expected_realm, $p_timeout = 2) {
+      if (($p_host == '') || ($p_expected_realm == '') || !function_exists('curl_init')) {
+        return false;
+      }
+
+      $v_ch = curl_init('http://' . $p_host . '/');
+      curl_setopt($v_ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($v_ch, CURLOPT_HEADER, true);
+      curl_setopt($v_ch, CURLOPT_NOBODY, false);
+      curl_setopt($v_ch, CURLOPT_CONNECTTIMEOUT, $p_timeout);
+      curl_setopt($v_ch, CURLOPT_TIMEOUT, $p_timeout);
+      curl_setopt($v_ch, CURLOPT_FOLLOWLOCATION, false);
+      $v_response = @curl_exec($v_ch);
+      $v_http_code = curl_getinfo($v_ch, CURLINFO_HTTP_CODE);
+      $v_curl_error = curl_error($v_ch);
+      curl_close($v_ch);
+
+      if ($v_response === false) {
+        openmqttgatewaylog::log('debug', 'omgHttpCheckAuthRealm(' . $p_host . ') : ' . $v_curl_error);
+        return false;
+      }
+
+      if ($v_http_code != 401) {
+        openmqttgatewaylog::log('debug', 'omgHttpCheckAuthRealm(' . $p_host . ') : code HTTP inattendu (' . $v_http_code . ')');
+        return false;
+      }
+
+      if (!preg_match('/WWW-Authenticate:\s*(?:Digest|Basic)[^\r\n]*realm="([^"]*)"/i', $v_response, $v_matches)) {
+        openmqttgatewaylog::log('debug', 'omgHttpCheckAuthRealm(' . $p_host . ') : pas d\'en-tête WWW-Authenticate avec realm');
+        return false;
+      }
+
+      if ($v_matches[1] !== $p_expected_realm) {
+        openmqttgatewaylog::log('debug', 'omgHttpCheckAuthRealm(' . $p_host . ') : realm "' . $v_matches[1] . '" different de celui attendu "' . $p_expected_realm . '"');
+        return false;
+      }
+
+      return true;
     }
     /* -------------------------------------------------------------------------*/
 
