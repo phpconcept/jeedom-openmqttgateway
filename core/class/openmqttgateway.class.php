@@ -1664,6 +1664,19 @@ public function toHtml_gateway($_version = 'dashboard') {
       }
       openmqttgatewaylog::log('info', 'Gateway "'.$this->getName().'" passe en mode connectée.');
       $this->checkAndUpdateCmd('online_status', 1);
+
+      // ----- La gateway est de nouveau active en MQTT : on la considere forcement
+      // joignable, on remet donc http_status a 1 (evite d'afficher une icone
+      // d'alerte obsolete issue d'un ancien test HTTP negatif fait pendant
+      // qu'elle etait hors ligne)
+      $this->omgCmdCreate('http_status', array(
+        'name' => 'Joignable HTTP',
+        'type' => 'info',
+        'subtype' => 'binary',
+        'isHistorized' => 0,
+        'isVisible' => 0,
+      ));
+      $this->checkAndUpdateCmd('http_status', 1);
     }
     /* -------------------------------------------------------------------------*/
 
