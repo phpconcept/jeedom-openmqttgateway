@@ -1169,6 +1169,10 @@ public function toHtml_gateway($_version = 'dashboard') {
       $replace['#online_label#'] = $v_online ? 'label-success' : 'label-danger';
       $replace['#online_text#'] = $v_online ? __('En ligne', __FILE__) : __('Hors ligne', __FILE__);
 
+      // ----- Adresse IP de la gateway
+      $v_ip = $this->omgCmdGetValue('ip');
+      $replace['#ip_address#'] = ($v_ip != '') ? $v_ip : '—';
+
       // ----- Dernier message MQTT reçu
       $v_last_ts = $this->getStatus('last_rcv_mqtt');
       $replace['#last_seen#'] = ($v_last_ts != '') ? openmqttgateway::omgFormatElapsed($v_last_ts) : __('Jamais', __FILE__);
