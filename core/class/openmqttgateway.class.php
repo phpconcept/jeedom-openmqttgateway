@@ -1172,14 +1172,21 @@ public function toHtml_gateway($_version = 'dashboard') {
       $v_last_ts = $this->getStatus('last_rcv_mqtt');
       $replace['#last_seen#'] = ($v_last_ts != '') ? openmqttgateway::omgFormatElapsed($v_last_ts) : __('Jamais', __FILE__);
 
-      // ----- Test HTTP de secours (uniquement si hors ligne MQTT)
-      $replace['#http_line_style#'] = 'display:none;';
-      $replace['#http_status_text#'] = '';
-      if (!$v_online) {
-        $v_http_cmd = $this->getCmd(null, 'http_status');
-        if (is_object($v_http_cmd) && ($this->omgCmdGetValue('http_status') == 1)) {
-          $replace['#http_line_style#'] = '';
-          $replace['#http_status_text#'] = __('Joignable en HTTP mais MQTT inactif', __FILE__);
+      // ----- Icone de test HTTP (uniquement si un resultat existe)
+      $replace['#http_icon_class#'] = '';
+      $replace['#http_icon_color#'] = '';
+      $replace['#http_icon_title#'] = '';
+      $v_http_cmd = $this->getCmd(null, 'http_status');
+      if (is_object($v_http_cmd)) {
+        if ($this->omgCmdGetValue('http_status') == 1) {
+          $replace['#http_icon_class#'] = 'fas fa-check-circle';
+          $replace['#http_icon_color#'] = '#2ecc71';
+          $replace['#http_icon_title#'] = __('OpenMQTT joignable en IP', __FILE__);
+        }
+        else {
+          $replace['#http_icon_class#'] = 'fas fa-exclamation-triangle';
+          $replace['#http_icon_color#'] = '#e67e22';
+          $replace['#http_icon_title#'] = __('OpenMQTT injoignable en IP', __FILE__);
         }
       }
 
